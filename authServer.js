@@ -32,29 +32,11 @@ const updateRefreshToken = (username, refreshToken) => {
     })
 }
 
-const posts = [{
-        userid: 1,
-        post: 'postHenry'
-    },
-    {
-        userid: 2,
-        post: 'postJim'
-    },
-    {
-        userid: 1,
-        post: 'postHenry2'
-    }
-]
-
-app.get('/posts', verifyToken, (req, res) => {
+/*app.get('/posts', verifyToken, (req, res) => {
     // res.json({ posts: 'my posts' });
     res.json(posts.filter(post => post.userid === req.userId));
-});
+});*/
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-    console.log(`Server listen on ${PORT}`);
-});
 
 const generateToken = payload => {
     const { id, username } = payload;
@@ -115,3 +97,8 @@ app.delete('/logout', verifyToken, (req, res) => {
     updateRefreshToken(user.username, null)
     console.log(users)
 })
+
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
+    console.log(`Server listen on ${PORT}`);
+});
