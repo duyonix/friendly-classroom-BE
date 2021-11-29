@@ -1,7 +1,10 @@
-const router = require('express-promise-router')();
+const router = require('express').Router()
 const authorizeController = require('../controller/authorize.controller');
+const auth = require('../middleware/auth')
 
-router.get('/login', authorizeController.seeAllUsers);
-router.post('/signup', authorizeController.signup);
+router.route('/signup').post(authorizeController.signup)
+router.route('/login').post(authorizeController.login)
+router.route('/refreshToken').post(authorizeController.refreshToken)
+router.route('/logout').delete(auth, authorizeController.logout)
 
-module.exports = router;
+module.exports = router

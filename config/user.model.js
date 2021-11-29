@@ -12,6 +12,18 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         minlength: 5
+    },
+    gmail: {
+        type: String,
+        required: true
+    },
+    sex: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    refreshToken: {
+        type: String
     }
 }, {
     timestamps: true

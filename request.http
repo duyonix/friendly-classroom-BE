@@ -1,35 +1,18 @@
-GET http://localhost:4000/posts
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJoZW5yeSIsImlhdCI6MTYzNzgzNzMyMywiZXhwIjoxNjM3ODM3MzQ4fQ.wbAiAdnXM1w0um6uTyMdnI22EMuw9iD9ZbMMwlcnXus
-
-###
-
-POST http://localhost:4000/login
+POST http://localhost:5000/api/authorize/signup
 Content-Type: application/json
 
 {
-    "username": "henry"
+    "username": "Thanh Truc",
+    "password": "MinhBao",
+    "gmail": "Minhbaodinh0808@gmail.com",
+    "sex": "female"
 }
 
 
 ###
 
-POST http://localhost:4000/token
-Content-Type: application/json
 
-{
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJoZW5yeSIsImlhdCI6MTYzNzgzNzI5NiwiZXhwIjoxNjM3ODQwODk2fQ.4skeYVlf_eofia19quMpGsE-FYr2mTV_XuAG6AWkjso"
-}
-
-
-###
-
-DELETE http://localhost:4000/logout
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJoZW5yeSIsImlhdCI6MTYzNzgzNzcwMSwiZXhwIjoxNjM3ODM3NzI2fQ.Z_WmenXfwZOLHfWqk_IQlbQWmD6A95KZel0aLhjyTQw
-
-
-###
-
-POST http://localhost:5000/api/user/signup
+POST http://localhost:5000/api/authorize/login
 Content-Type: application/json
 
 {
@@ -41,10 +24,23 @@ Content-Type: application/json
 ###
 
 
-POST http://localhost:5000/api/user/login
+GET http://localhost:5000/api/getSomeInformation
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MzgxNTUzMjcsImV4cCI6MTYzODE1NTM1Mn0.2UvCvQGHyRTpMbH6u4Nju8BDO8S4ajG7BsB1c7eY-Cw
+
+
+###
+
+
+POST http://localhost:5000/api/authorize/refreshToken
 Content-Type: application/json
 
 {
-    "username": "Thanh Truc",
-    "password": "MinhBao"
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MzgxNTUyOTEsImV4cCI6MTYzODE1ODg5MX0.UhvQJvNzPIkAFtO98QI3phK4N4X6loo-fdj8jGJw3ak"
 }
+
+
+###
+
+
+DELETE http://localhost:5000/api/authorize/logout
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYTQ0MTU2ZjAwYzE0N2NmY2VhOWM1ZSIsInVzZXJuYW1lIjoiVGhhbmggVHJ1YyIsImlhdCI6MTYzODE1NjU5MywiZXhwIjoxNjM4MTYwMTkzfQ.jHkrzRNbKsZD0ru1XlsUOf8AB9eI-Ksy8j11cbxz7fo
