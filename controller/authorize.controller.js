@@ -2,6 +2,7 @@
 const jwt = require('jsonwebtoken')
 
 const User = require('../config/user.model')
+const argon2 = require('argon2')
 
 const generateToken = payload => {
     const { id, username } = payload;
@@ -18,29 +19,57 @@ const generateToken = payload => {
 
 exports.signup = async(req, res) => {
     const username = req.body.username
-    const password = req.body.password
+    var password = req.body.password
     const gmail = req.body.gmail
     const sex = req.body.sex
-    const newUser = new User({ username, password, gmail, sex })
     try {
+        // await newUser.save()
+        // res.json('User is added')
+        const user = await User.findOne({ username })
+        if (user) {
+            return res.status(400).json({ success: false, message: "Username already taken" })
+        }
+        password = await argon2.hash(password)
+        console.log(password)
+        const newUser = new User({ username, password, gmail, sex })
         await newUser.save()
         res.json('User is added')
     } catch (err) {
-        res.status(400).json('ERROR: ' + err)
+        res.status(400).json('Failed')
+        console.log(err)
     }
 }
 
 exports.login = async(req, res) => {
     const username = req.body.username
     const password = req.body.password
-    const user = await User.find({ username: username, password: password })
+    const user = await User.find({ username })
+    console.log(user)
     if (!user) {
         return res.sendStatus(401)
     }
-    const tokens = generateToken(user[0]);
-    console.log(user)
-    await User.updateOne({ username: username }, { $set: { refreshToken: tokens.refreshToken } })
-    return res.status(200).json(tokens)
+    try {
+        console.log(user[0].password)
+        console.log(password)
+        const passwordValid = await argon2.verify(user[0].password, password)
+
+        if (!passwordValid) {
+            return res.status(400).json({ message: "False password" })
+        }
+        const tokens = generateToken(user[0]);
+        // console.log(user)
+        await User.updateOne({ username: username }, { $set: { refreshToken: tokens.refreshToken } })
+        return res.status(200).json(tokens)
+    } catch (err) {
+        res.status(400).json("Failed")
+        console.log(err)
+    }
+
+
+    /*if (password != user.password) {
+        return res.status(400).json({ message: "False password" })
+    }*/
+
 }
 
 exports.refreshToken = async(req, res) => {
