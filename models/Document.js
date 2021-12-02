@@ -1,3 +1,4 @@
+const { Binary } = require('bson')
 const mongoose = require('mongoose')
 
 const Document = new mongoose.Schema({
@@ -14,7 +15,7 @@ const Document = new mongoose.Schema({
         type: String
     },
     data: {
-        type: Buffer
+        type: String
     }
 })
 

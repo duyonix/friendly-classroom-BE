@@ -42,9 +42,14 @@ Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MzgyODQxMTAsImV4
 
 ###
 
-POST http://localhost:5000/api/document/upload
+POST http://localhost:5001/api/document/upload
 
 
 ###
 
-GET http://localhost:5000/api/document/download
+GET http://localhost:5001/api/document/download
+
+
+###
+
+POST http://localhost:5000/profile
