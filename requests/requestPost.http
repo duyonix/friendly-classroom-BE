@@ -1,0 +1,37 @@
+POST http://localhost:5000/api/post/create
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYTc5NWYxMjA2ZTgyZDdkNWUxMDA3YSIsInVzZXJuYW1lIjoiZGFtdGhpeHVhbnkiLCJpYXQiOjE2Mzg1MTY2MTgsImV4cCI6MTYzODUyMDIxOH0.QoDQsDcAdEBPi6KfjM2D6Tjz4gBfMXZzje8_joTHp6k
+
+{
+    "title": "new assignmenaaaaat",
+    "body": "heelo cac em day la post dau tien"
+}
+
+###
+
+DELETE http://localhost:5000/api/post/delete
+Content-Type: application/json
+
+{
+    "_id":"61a7504b31f42cfa91c434bd"
+}
+
+###
+POST http://localhost:5000/api/authorize/signup
+Content-Type: application/json
+
+{
+    "username": "damthixuany",
+    "password": "1233456",
+    "gmail": "ydam123@gmail.com",
+    "sex": "female2"
+}
+
+###
+POST http://localhost:5000/api/authorize/login
+Content-Type: application/json
+
+{
+    "username": "damthixuany",
+    "password": "1233456"
+}

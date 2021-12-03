@@ -1,7 +1,7 @@
 const { Binary } = require('bson')
 const mongoose = require('mongoose')
 
-const Document = new mongoose.Schema({
+const Homework = new mongoose.Schema({
     classId: {
         type: String,
         required: true
@@ -17,9 +17,15 @@ const Document = new mongoose.Schema({
     filename: {
         type: String
     },
+    createDate: {
+        type: Date
+    },
+    deadline: {
+        type: Date
+    },
     data: {
         type: String
     }
 })
 
-module.exports = mongoose.model('Document', Document)
+module.exports = mongoose.model('Homework', Homework)
