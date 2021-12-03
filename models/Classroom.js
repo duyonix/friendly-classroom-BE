@@ -38,14 +38,18 @@ const Classroom = new Schema(
       type: ObjectId,
       ref: 'User',
     },
-    listTeacher: {
-      type: ObjectId,
-      ref: 'User',
-    },
-    listStudent: {
-      type: ObjectId,
-      ref: 'User',
-    },
+    listTeacher: [
+      {
+        type: ObjectId,
+        ref: 'User',
+      },
+    ],
+    listStudent: [
+      {
+        type: ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     timestamps: true,

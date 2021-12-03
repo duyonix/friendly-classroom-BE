@@ -4,6 +4,10 @@ const { ObjectId } = mongoose.Schema.Types;
 
 const Submission = new Schema(
   {
+    homeworkId: {
+      type: ObjectId,
+      ref: 'Homework',
+    },
     studentId: {
       type: ObjectId,
       ref: 'User',

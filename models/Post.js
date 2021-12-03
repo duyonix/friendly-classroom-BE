@@ -3,6 +3,10 @@ const Schema = mongoose.Schema;
 const { ObjectId } = mongoose.Schema.Types;
 const Post = new Schema(
   {
+    classroomId: {
+      type: ObjectId,
+      ref: 'classroomId',
+    },
     title: {
       type: String,
       required: true,
