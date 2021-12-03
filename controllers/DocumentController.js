@@ -1,47 +1,67 @@
-const Document = require('../models/Document')
+/* const Document = require('../models/Document')
 const fs = require('fs')
 const path = require('path')
 const formidable = require('formidable')
+const multer = require('multer')
+const upload = multer({ dest: 'uploads/' })
+    // const fs = require('fs')
+const { GridFsStorage } = require('multer-gridfs-storage');
+const mongoose = require('mongoose')
 
+const storage = new GridFsStorage({ url: process.env.DATABASE_URL })
+const Grid = require('gridfs-stream');
+
+const mongodb = require('mongodb')
 
 class DocumentController {
     upload = async(req, res) => {
-        console.log("Called")
         var classId = '2'
         var title = 'minhbaodeptrai'
+            // assume that there is no 2 document have same title
         var description = 'oke'
         try {
-            var urlTestFile = path.join(__dirname, '../testingFolder/minhbao.pdf')
-            var urlTestFile2 = path.join(__dirname, '../testingFolder/minhbao2.pdf')
-            fs.readFile(urlTestFile, 'latin1', async function(err, data) {
-                console.log(data)
-
-                if (err) throw err;
-                var newDocument = new Document({ classId, title, description, data })
-                await newDocument.save()
-                    /*fs.writeFile(urlTestFile2, data, 'latin1', function(err) {
-                        if (err) {
-                            return console.log(err);
-                        }
-                        console.log("The file was saved!");
-                    });*/
-                res.json({ message: "saved", data: data })
-            });
+            const { file } = req
+            console.log(file)
+            file.filename = classId + "-" + title
+            const stream = fs.createReadStream(file.path);
+            storage.fromStream(stream, req, file)
+                .then(() => res.send('File uploaded'))
+                .catch(() => res.status(500).send('error'));
         } catch (err) {
-            res.json({ message: "failed" })
+            res.status(400).json({ message: "failed" })
         }
     }
     download = async(req, res) => {
-        const documents = await Document.find()
-        var urlTestFile = path.join(__dirname, '../testingFolder/minhbao2.pdf')
-        fs.writeFile(urlTestFile, documents[0].data, 'latin1', function(err) {
+        var conn = await mongoose.connection;
+        var gfs = Grid(conn.db, mongoose.mongo);
+        gfs.findOne({ filename: "a78ea4960d1a8e8eb939ee191051b325" }, function(err, file) {
             if (err) {
-                return console.log(err);
+                return res.status(400).send(err);
+            } else if (!file) {
+                return res.status(404).send('Error on the database looking for the file.');
             }
-            console.log("The file was saved!");
+
+            res.set('Content-Type', file.contentType);
+            res.set('Content-Disposition', 'attachment; filename="' + file.filename + '"');
+
+            var readstream = gfs.createReadStream({
+                filename: "a78ea4960d1a8e8eb939ee191051b325"
+            });
+
+            readstream.on('open', function() {
+                readstream.pipe(res)
+            })
+
+            readstream.on("error", function(err) {
+                console.log(err)
+                res.end();
+            });
+            // readstream.pipe(res);
+
+
         });
+    };
+};
 
-    }
-}
 
-module.exports = new DocumentController();
+module.exports = new DocumentController(); */
