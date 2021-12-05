@@ -9,7 +9,9 @@
 </head>
 
 <body>
-    <form action="http://localhost:5001/api/document/download">
+    <form action="http://localhost:5001/api/document/download" enctype="multipart/form-data" method="post">
+        <input type="text" name="classId" text="classId"/>
+        <input type="text" name="title" text="title"/>
         <input type="submit" text="Submit" />
     </form>
 </body>

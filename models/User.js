@@ -17,10 +17,13 @@ const User = new mongoose.Schema({
         type: String,
         required: true,
     },
-    sex: {
+    fullname: {
         type: String,
         required: true,
-        enum: ['male', 'female']
+    },
+    phoneNumber: {
+        type: String,
+        $regex: /(84|0[3|5|7|8|9])+([0-9]{8})\b/
     },
     refreshToken: {
         type: String,

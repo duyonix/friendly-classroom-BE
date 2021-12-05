@@ -2,10 +2,11 @@ POST http://localhost:5000/api/authorize/signup
 Content-Type: application/json
 
 {
-    "username": "Thanh Truc",
+    "username": "Thanh Truc cute",
     "password": "MinhBao",
     "gmail": "Minhbaodinh0808@gmail.com",
-    "sex": "female"
+    "phoneNumber": "0832408762",
+    "fullname": "Dinh Minh Bao"
 }
 
 

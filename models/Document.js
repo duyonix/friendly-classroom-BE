@@ -14,12 +14,15 @@ const Document = new mongoose.Schema({
     description: {
         type: String
     },
-    filename: {
-        type: String
+    creatorName: {
+        type: String,
+        required: true
     },
-    data: {
-        type: String
-    }
+    attachedFiles: [{
+        // filename
+        type: String,
+        unique: true
+    }]
 })
 
 module.exports = mongoose.model('Document', Document)
