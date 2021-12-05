@@ -1,34 +1,31 @@
-POST http://localhost:5001/api/61ab5d0864202bccfcbed4de/posts
+POST http://localhost:5001/api/classroom
 Content-Type: application/json
 Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYTc5NWYxMjA2ZTgyZDdkNWUxMDA3YSIsInVzZXJuYW1lIjoiZGFtdGhpeHVhbnkiLCJpYXQiOjE2Mzg2MjAzODUsImV4cCI6MTYzODYzODM4NX0.XbHbDHihT68RZqlhitpbjsfbUu76zzQ9i--tBw_QyvY
 
 {
-    "title": "bbaan",
-    "body": "ko làm bị trừ điểm"
+    "name": "toán 6",
+    "description": "lop hoc cua ydam"
 }
 
-
 ###
 
-GET http://localhost:5001/api/61ab5d0864202bccfcbed4de/posts/all
+GET http://localhost:5001/api/classroom/61ab5d0864202bccfcbed4de
 Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYTc5NWYxMjA2ZTgyZDdkNWUxMDA3YSIsInVzZXJuYW1lIjoiZGFtdGhpeHVhbnkiLCJpYXQiOjE2Mzg2MjAzODUsImV4cCI6MTYzODYzODM4NX0.XbHbDHihT68RZqlhitpbjsfbUu76zzQ9i--tBw_QyvY
-
 ###
 
-PUT http://localhost:5001/api/61ab5d0864202bccfcbed4de/posts/61ab5fc5de7cb0dfa504397f
+
+PUT http://localhost:5001/api/classroom/61ab5d0864202bccfcbed4de
 Content-Type: application/json
 Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYTc5NWYxMjA2ZTgyZDdkNWUxMDA3YSIsInVzZXJuYW1lIjoiZGFtdGhpeHVhbnkiLCJpYXQiOjE2Mzg2MjAzODUsImV4cCI6MTYzODYzODM4NX0.XbHbDHihT68RZqlhitpbjsfbUu76zzQ9i--tBw_QyvY
 
 {
-    "title": "cai post moi",
-    "body": "ko có hạn"
+    "description": "lớp học của ý đàm"
 }
-
-
 ###
 
-DELETE http://localhost:5001/api/61ab5d0864202bccfcbed4de/posts/61ab77653737c7c596952dbc
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYTc5NWYxMjA2ZTgyZDdkNWUxMDA3YSIsInVzZXJuYW1lIjoiZGFtdGhpeHVhbnkiLCJpYXQiOjE2Mzg2MjAzODUsImV4cCI6MTYzODYzODM4NX0.XbHbDHihT68RZqlhitpbjsfbUu76zzQ9i--tBw_QyvY
+DELETE http://localhost:5001/api/classroom/61aa4541f34150f813a7dd5c
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYTc5NWYxMjA2ZTgyZDdkNWUxMDA3YSIsInVzZXJuYW1lIjoiZGFtdGhpeHVhbnkiLCJpYXQiOjE2Mzg1NDczMzgsImV4cCI6MTYzODU1MDkzOH0.3KyFGdM1rXSjdO7ElazmsyNqe59U-Wv_uY-B5Ab9xSM
+
 
 ###
 
