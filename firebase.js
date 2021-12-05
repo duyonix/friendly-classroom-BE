@@ -1,0 +1,11 @@
+const admin = require('firebase-admin')
+
+admin.initializeApp({
+    credential: admin.credential.cert('C:/Users/DELL/Downloads/friendlyclassroombe-firebase-adminsdk-iawwe-31df08dce9.json'),
+    storageBucket: 'gs://friendlyclassroombe.appspot.com'
+})
+const bucket = admin.storage().bucket()
+
+module.exports = {
+    bucket
+}

@@ -14,9 +14,12 @@ const Document = new mongoose.Schema({
     description: {
         type: String
     },
-    data: {
+    creatorName: {
+        type: String,
+    },
+    attachedFiles: [{
         type: String
-    }
+    }]
 })
 
 module.exports = mongoose.model('Document', Document)
