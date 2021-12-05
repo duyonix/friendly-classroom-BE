@@ -3,22 +3,26 @@ const Schema = mongoose.Schema;
 const { ObjectId } = mongoose.Schema.Types;
 
 const Comment = new Schema(
-  {
-    postId: {
-      type: ObjectId,
-      ref: 'Post',
+    {
+        classroomId: {
+            type: ObjectId,
+            ref: 'classroomId',
+        },
+        postId: {
+            type: ObjectId,
+            ref: 'Post',
+        },
+        commentedBy: {
+            type: ObjectId,
+            ref: 'User',
+        },
+        body: {
+            type: String,
+        },
     },
-    commentedBy: {
-      type: ObjectId,
-      ref: 'User',
-    },
-    body: {
-      type: String,
-    },
-  },
-  {
-    timestamps: true,
-  }
+    {
+        timestamps: true,
+    }
 );
 
 module.exports = mongoose.model('Comment', Comment);

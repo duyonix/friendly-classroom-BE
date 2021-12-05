@@ -2,134 +2,229 @@ const mongoose = require('mongoose');
 const Post = require('../models/Post');
 const User = require('../models/User');
 const Classroom = require('../models/Classroom');
-const crypto = require('crypto');
 
 class ClassroomController {
-  // @route GET api/posts
-  // @desc Get posts
-  // @access Private
-  get = async (req, res) => {
-    try {
-      const classroom = await Classroom.find({
-        classroomId: req.params.classroomId,
-      });
-      res.json({ success: true, classroom });
-    } catch (error) {
-      console.log(error);
-      res
-        .status(500)
-        .json({ success: false, message: 'Internal server error' });
-    }
-  };
-
-  // @route POST api/posts
-  // @desc Create post
-  // @access Private
-  create = async (req, res) => {
-    const { name, description } = req.body;
-    if (!name || !description)
-      return res
-        .status(400)
-        .json({ success: false, message: 'Please add all the fields' });
-
-    try {
-      let code = crypto.randomBytes(10).toString('hex');
-      //   TODO: check code unique
-      const newClassroom = new Classroom({
-        name,
-        code,
-        description,
-        createdBy: req.userId,
-        listTeacher: [req.userId],
-      });
-
-      await newClassroom.save();
-      res.json({
-        success: true,
-        message: 'Create new classroom successfully',
-        classroom: newClassroom,
-      });
-    } catch (error) {
-      console.log(error);
-      res
-        .status(500)
-        .json({ success: false, message: 'Internal server error' });
-    }
-  };
-  // @route PUT api/posts
-  // @desc Update post
-  // @access Private
-  update = async (req, res) => {
-    const { name, description } = req.body;
-
-    // Simple validation
-    if (!name)
-      return res
-        .status(400)
-        .json({ success: false, message: 'Name is required' });
-
-    try {
-      const classroomUpdateCondition = {
-        _id: req.params.classroomId,
-        createdBy: req.userId,
-      };
-
-      updatedClassroom = await Classroom.findOneAndUpdate(
-        classroomUpdateCondition,
-        {
-          name,
-          description,
+    // @route GET api/posts
+    // @desc Get posts
+    // @access Private
+    get = async (req, res) => {
+        try {
+            const classroom = await Classroom.findById(req.params.classroomId);
+            res.json({ success: true, classroom });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error',
+            });
         }
-      );
+    };
 
-      // User not authorized to update classroom or classroom not found
-      if (!updatedClassroom)
-        return res.status(401).json({
-          success: false,
-          message: 'Classroom not found or user not authorized',
-        });
+    // @route POST api/posts
+    // @desc Create post
+    // @access Private
+    create = async (req, res) => {
+        const { name, description } = req.body;
+        if (!name || !description)
+            return res
+                .status(400)
+                .json({ success: false, message: 'Please add all the fields' });
 
-      res.json({
-        success: true,
-        message: 'Update classroom successfully',
-        classroom: updatedClassroom,
-      });
-    } catch (error) {
-      console.log(error);
-      res
-        .status(500)
-        .json({ success: false, message: 'Internal server error' });
-    }
-  };
+        try {
+            let code = Math.random().toString(36).substring(2, 8);
+            // check code unique
+            while (await Classroom.findOne({ code: code })) {
+                code = Math.random().toString(36).substring(2, 8);
+            }
 
-  // @route DELETE api/posts
-  // @desc Delete post
-  // @access Private
-  delete = async (req, res) => {
-    try {
-      const classroomDeleteCondition = {
-        _id: req.params.classroomId,
-        createdBy: req.userId,
-      };
-      // TODO: delete all comment have postId
-      const deleteClassroom = await Classroom.findOneAndDelete(
-        classroomDeleteCondition
-      );
+            const newClassroom = new Classroom({
+                name,
+                code,
+                description,
+                teacherId: req.userId,
+            });
+            await newClassroom.save();
+            res.json({
+                success: true,
+                message: 'Create new classroom successfully',
+                classroom: newClassroom,
+                userId: req.userId,
+            });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error',
+            });
+        }
+    };
+    // @route PUT api/posts
+    // @desc Update post
+    // @access Private
+    update = async (req, res) => {
+        const { name, description } = req.body;
 
-      if (!deleteClassroom)
-        return res.status(401).json({
-          success: false,
-          message: 'Classroom not found or user not authorized',
-        });
+        try {
+            const classroomUpdateCondition = {
+                _id: req.params.classroomId,
+                teacherId: req.userId,
+            };
 
-      res.json({ success: true, classroom: deleteClassroom });
-    } catch (error) {
-      console.log(error);
-      res
-        .status(500)
-        .json({ success: false, message: 'Internal server error' });
-    }
-  };
+            let updatedClassroom = await Classroom.findOneAndUpdate(
+                classroomUpdateCondition,
+                {
+                    name,
+                    description,
+                },
+                { new: true }
+            );
+
+            // User not authorized to update classroom or classroom not found
+            if (!updatedClassroom)
+                return res.status(401).json({
+                    success: false,
+                    message: 'Classroom not found or user not authorized',
+                });
+
+            res.json({
+                success: true,
+                message: 'Update classroom successfully',
+                classroom: updatedClassroom,
+            });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error',
+            });
+        }
+    };
+
+    // @route DELETE api/posts
+    // @desc Delete post
+    // @access Private
+    delete = async (req, res) => {
+        try {
+            const classroomDeleteCondition = {
+                _id: req.params.classroomId,
+                teacherId: req.userId,
+            };
+            //  delete all comment & post have classroomId
+            Comment.deleteMany({ classroomId: req.params.classroomId });
+            Post.deleteMany({ classroomId: req.params.classroomId });
+
+            const deleteClassroom = await Classroom.findOneAndDelete(
+                classroomDeleteCondition
+            );
+
+            if (!deleteClassroom)
+                return res.status(401).json({
+                    success: false,
+                    message: 'Classroom not found or user not authorized',
+                });
+
+            res.json({ success: true, classroom: deleteClassroom });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error',
+            });
+        }
+    };
+
+    join = async (req, res) => {
+        const { code } = req.body;
+
+        try {
+            const classroomUpdateCondition = {
+                code: code,
+            };
+
+            // khác teacherId
+
+            let updatedClassroom = await Classroom.findOne({ code: code });
+
+            if (!updatedClassroom || updatedClassroom.teacherId == req.userId)
+                return res.status(401).json({
+                    success: false,
+                    message: 'Classroom not found or user is teacher',
+                });
+
+            updatedClassroom.listStudent.push(req.userId);
+            await updatedClassroom.save();
+            // TODO: cập nhật danh sách classroom cũa user
+
+            // User not authorized to update classroom or classroom not found
+            if (!updatedClassroom)
+                return res.status(401).json({
+                    success: false,
+                    message: 'Classroom not found or user not authorized',
+                });
+
+            res.json({
+                success: true,
+                message: 'join classroom successfully',
+                classroom: updatedClassroom,
+            });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error',
+            });
+        }
+    };
+    removeStudent = async (req, res) => {
+        const { studentId } = req.body;
+
+        try {
+            const classroomUpdateCondition = {
+                _id: req.params.classroomId,
+                teacherId: req.userId,
+            };
+
+            let updatedClassroom = await Classroom.findOne(
+                classroomUpdateCondition
+            );
+            updatedClassroom.listStudent.pull(studentId);
+            await updatedClassroom.save();
+
+            // User not authorized to update classroom or classroom not found
+            if (!updatedClassroom)
+                return res.status(401).json({
+                    success: false,
+                    message: 'Classroom not found or user not authorized',
+                });
+
+            res.json({
+                success: true,
+                message: 'Remove classroom successfully',
+                classroom: updatedClassroom,
+            });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error',
+            });
+        }
+    };
+    people = async (req, res) => {
+        try {
+            const classroom = await Classroom.findById(req.params.classroomId)
+                .select('teacherId listStudent')
+                .populate('teacherId listStudent');
+
+            res.json({ success: true, classroom });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error',
+            });
+        }
+    };
 }
 
 module.exports = new ClassroomController();

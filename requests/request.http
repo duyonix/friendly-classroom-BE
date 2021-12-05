@@ -38,3 +38,18 @@ Content-Type: application/json
 
 DELETE http://localhost:5000/api/authorize/logout
 Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MzgyODQxMTAsImV4cCI6MTYzODI4NzcxMH0.zkqrSuTxMkD7y_FCzHA6yOvo6D4x2zmq1Gef7-dif7M
+
+
+###
+
+POST http://localhost:5001/api/document/upload
+
+
+###
+
+GET http://localhost:5001/api/document/download
+
+
+###
+
+POST http://localhost:5000/profile
