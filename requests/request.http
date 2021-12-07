@@ -1,22 +1,23 @@
-POST http://localhost:5000/api/authorize/signup
+POST http://localhost:5001/api/authorize/signup
 Content-Type: application/json
 
 {
-    "username": "Thanh Truc",
+    "username": "Thanh Truc 2",
     "password": "MinhBao",
     "gmail": "Minhbaodinh0808@gmail.com",
-    "sex": "female"
+    "fullname": "Ho Thi Thanh Truc",
+    "phoneNumber": "0832408762"
 }
 
 
 ###
 
 
-POST http://localhost:5000/api/authorize/login
+POST http://localhost:5001/api/authorize/login
 Content-Type: application/json
 
 {
-    "username": "Thanh Truc",
+    "username": "Thanh Truc 2",
     "password": "MinhBao"
 }
 
