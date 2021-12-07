@@ -1,8 +1,8 @@
-POST http://localhost:5001/api/authorize/signup
+POST http://localhost:5000/api/authorize/signup
 Content-Type: application/json
 
 {
-    "username": "Thanh Truc 2",
+    "username": "Thanh Truc",
     "password": "MinhBao",
     "gmail": "Minhbaodinh0808@gmail.com",
     "fullname": "Ho Thi Thanh Truc",
@@ -13,7 +13,7 @@ Content-Type: application/json
 ###
 
 
-POST http://localhost:5001/api/authorize/login
+POST http://localhost:5000/api/authorize/login
 Content-Type: application/json
 
 {
@@ -60,4 +60,4 @@ POST http://localhost:5000/profile
 
 
 GET http://localhost:5000/api/user/getInformation
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYWRjOGI3MWFkMzgxNjIyZDMzNjBhMyIsInVzZXJuYW1lIjoiVGhhbmggVHJ1YyIsImlhdCI6MTYzODg3NzQ5NywiZXhwIjoxNjM4ODgxMDk3fQ.6qG6uPd09zPmRkIt6GKagiQM2lHLTqwhl9R2FY6xpAM
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYWY3MWNlNGFkZjNhNDA0NDExNzU3YSIsInVzZXJuYW1lIjoiVGhhbmggVHJ1YyIsImlhdCI6MTYzODg4ODE0MywiZXhwIjoxNjM4OTI0MTQzfQ.u2mw1zFOJT7vnQkrlLLgqeT9CmqnxX9D_HHDMClOUMw

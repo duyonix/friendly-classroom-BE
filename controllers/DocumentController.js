@@ -34,8 +34,6 @@ class DocumentController {
         try {
             const classId = req.body.classId
             const title = req.body.title
-
-
             Document.findOne({ classId: classId, title: title }, function(err, document) {
                 if (err) {
                     return res.status(400).json({ success: false, message: 'ERROR' })
@@ -47,7 +45,7 @@ class DocumentController {
                 };
                 firebase.bucket.file(urlFile).getSignedUrl(config, function(err, url) {
                     if (err) {
-                        return res.status(400).json({ success: true, message: 'ERROR' })
+                        return res.status(400).json({ success: false, message: 'ERROR' })
                     }
                     return res.status(200).json({ success: true, document, downloadURL: url })
 

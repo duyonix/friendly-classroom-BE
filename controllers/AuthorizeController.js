@@ -11,12 +11,7 @@ const generateToken = (payload) => {
             expiresIn: '10h',
         }
     );
-    const refreshToken = jwt.sign({ id, username },
-        process.env.REFRESH_TOKEN_SECRET, {
-            expiresIn: '5h',
-        }
-    );
-    return { accessToken, refreshToken };
+    return accessToken
 };
 
 class AuthorizeController {
@@ -34,6 +29,19 @@ class AuthorizeController {
                     message: 'Username already taken',
                 });
             }
+            // Test function 
+            const classes = [{
+                    className: 'Toan lop 10',
+                    role: 'TEACHER'
+                },
+                {
+                    className: 'Sinh hoc lop 8 :D',
+                    role: 'STUDENT'
+                }
+            ]
+
+
+
             password = await argon2.hash(password);
             const newUser = new User({
                 username,
@@ -41,6 +49,7 @@ class AuthorizeController {
                 fullname,
                 gmail,
                 phoneNumber,
+                classes
             });
             await newUser.save();
             return res
@@ -80,40 +89,13 @@ class AuthorizeController {
                             message: 'Wrong password',
                         });
                     }
-                    const tokens = generateToken(user);
-                    await User.updateOne({ username: username }, { $set: { refreshToken: tokens.refreshToken } });
-                    return res.status(200).json({ success: true, tokens });
+                    const token = generateToken(user);
+                    return res.status(200).json({ success: true, token });
                 }
             );
         } catch (err) {
             return res.status(400).json({ success: false, message: 'ERROR' });
         }
-    };
-
-    refreshToken = async(req, res) => {
-        const refreshToken = req.body.refreshToken;
-        if (!refreshToken) {
-            return res.sendStatus(401);
-        }
-        const user = User.find({ refreshToken: refreshToken });
-        if (!user) {
-            return res.sendStatus(403);
-        }
-        try {
-            jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-            const tokens = generateToken(user);
-            await User.updateOne({ username: user.username }, { $set: { refreshToken: tokens.refreshToken } });
-            res.status(200);
-            res.json(tokens);
-        } catch (error) {
-            res.sendStatus(403);
-        }
-    };
-
-    logout = async(req, res) => {
-        console.log(req.userId);
-        await User.updateOne({ _id: req.userId }, { $set: { refreshToken: null } });
-        res.status(200).json({ Message: 'Success' });
     };
 }
 

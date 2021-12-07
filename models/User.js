@@ -7,12 +7,10 @@ const User = new mongoose.Schema({
         required: true,
         unique: true,
         trim: true,
-        minlength: 8,
     },
     password: {
         type: String,
         required: true,
-        minlength: 5,
         select: false,
     },
     fullname: {
@@ -27,16 +25,23 @@ const User = new mongoose.Schema({
         type: String,
         $regex: /(84|0[3|5|7|8|9])+([0-9]{8})\b/,
     },
-    refreshToken: {
-        type: String,
-    },
     classes: [{
-        type: ObjectId,
-        ref: 'Classroom'
+        id: {
+            type: ObjectId,
+            ref: 'Classroom',
+        },
+        role: {
+            type: String,
+            enum: ['TEACHER', 'STUDENT'],
+        },
+        className: {
+            type: String
+        }
     }],
     avatar: {
         type: String,
-    }
+    },
+
 }, {
     timestamps: true,
 });
