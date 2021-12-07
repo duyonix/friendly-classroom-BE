@@ -11,6 +11,7 @@ var storage = multer.diskStorage({
         cb(null, file.originalname)
     }
 })
+
 const upload = multer({
     storage: storage
 })
@@ -19,6 +20,6 @@ const auth = require('../middleware/auth')
 // router.post('/upload',auth, upload.single('file'), documentController.upload)
 
 router.post('/upload', upload.single('file'), documentController.upload)
-router.get('/download', documentController.download)
+router.post('/download', upload.single('file'), documentController.download)
 
 module.exports = router

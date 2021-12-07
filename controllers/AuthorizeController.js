@@ -13,7 +13,7 @@ const generateToken = (payload) => {
     );
     const refreshToken = jwt.sign({ id, username },
         process.env.REFRESH_TOKEN_SECRET, {
-            expiresIn: '1h',
+            expiresIn: '10h',
         }
     );
     return { accessToken, refreshToken };
