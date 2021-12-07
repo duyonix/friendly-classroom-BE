@@ -1,25 +1,27 @@
-const { Binary } = require('bson')
-const mongoose = require('mongoose')
+const { Binary } = require('bson');
+const mongoose = require('mongoose');
 
 const Document = new mongoose.Schema({
     classId: {
         type: String,
-        required: true
+        required: true,
     },
     title: {
         type: String,
         required: true,
-        minlength: 8
+        minlength: 8,
     },
     description: {
-        type: String
+        type: String,
     },
     creatorName: {
         type: String,
     },
-    attachedFiles: [{
-        type: String
-    }]
-})
+    attachedFiles: [
+        {
+            type: String,
+        },
+    ],
+});
 
-module.exports = mongoose.model('Document', Document)
+module.exports = mongoose.model('Document', Document);

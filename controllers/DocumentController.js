@@ -14,7 +14,7 @@ class DocumentController {
         // auth access token
         const file = req.file
         var options = {
-            destination: `document/${classId}/${title}/${file.filename}`
+            destination: `document/${classId}/${title}/${file.filename}`,
         };
         firebase.bucket.upload(file.path, options, async function(err, item) {
             try {
@@ -23,8 +23,8 @@ class DocumentController {
                 await newDocument.save()
                 return res.status(200).json({ success: true, message: 'Uploaded' })
             } catch (err) {
-                console.log(err)
-                res.status(400).json({ success: false, message: 'ERROR' })
+                console.log(err);
+                res.status(400).json({ success: false, message: 'ERROR' });
             }
 
         })

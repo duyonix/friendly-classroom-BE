@@ -1,11 +1,11 @@
-const router = require('express').Router()
+const router = require('express').Router();
 
-const documentController = require('../controllers/DocumentController')
+const documentController = require('../controllers/DocumentController');
 
-const multer = require('multer')
+const multer = require('multer');
 var storage = multer.diskStorage({
     destination: function(req, file, cb) {
-        cb(null, 'uploads/')
+        cb(null, 'uploads/');
     },
     filename: function(req, file, cb) {
         cb(null, file.originalname)
@@ -13,13 +13,13 @@ var storage = multer.diskStorage({
 })
 
 const upload = multer({
-    storage: storage
-})
-const auth = require('../middleware/auth')
+    storage: storage,
+});
+const auth = require('../middleware/auth');
 
 // router.post('/upload',auth, upload.single('file'), documentController.upload)
 
 router.post('/upload', upload.single('file'), documentController.upload)
 router.post('/download', upload.single('file'), documentController.download)
 
-module.exports = router
+module.exports = router;

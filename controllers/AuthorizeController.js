@@ -8,12 +8,12 @@ const generateToken = (payload) => {
     const { id, username } = payload;
     const accessToken = jwt.sign({ id, username },
         process.env.ACCESS_TOKEN_SECRET, {
-            expiresIn: '1h',
+            expiresIn: '10h',
         }
     );
     const refreshToken = jwt.sign({ id, username },
         process.env.REFRESH_TOKEN_SECRET, {
-            expiresIn: '10h',
+            expiresIn: '5h',
         }
     );
     return { accessToken, refreshToken };
@@ -24,44 +24,69 @@ class AuthorizeController {
         const username = req.body.username;
         var password = req.body.password;
         const gmail = req.body.gmail;
-        const phoneNumber = req.body.phoneNumber
-        const fullname = req.body.fullname
+        const phoneNumber = req.body.phoneNumber;
+        const fullname = req.body.fullname;
         try {
-            const user = await User.findOne({ username: username })
+            const user = await User.findOne({ username: username });
             if (user) {
-                return res.status(400).json({ success: false, message: 'Username already taken' })
+                return res.status(400).json({
+                    success: false,
+                    message: 'Username already taken',
+                });
             }
-            password = await argon2.hash(password)
-            const newUser = new User({ username, password, fullname, gmail, phoneNumber })
-            await newUser.save()
-            return res.status(200).json({ success: true, message: 'User is added' })
+            password = await argon2.hash(password);
+            const newUser = new User({
+                username,
+                password,
+                fullname,
+                gmail,
+                phoneNumber,
+            });
+            await newUser.save();
+            return res
+                .status(200)
+                .json({ success: true, message: 'User is added' });
         } catch (err) {
-            console.log(err)
-            res.status(400).json({ success: false, message: 'ERROR' })
+            console.log(err);
+            res.status(400).json({ success: false, message: 'ERROR' });
         }
     };
 
     login = async(req, res) => {
         try {
-            const username = req.body.username
-            const password = req.body.password
-            User.findOne({ username: username }, "username password", async function(err, user) {
-                if (err) {
-                    return res.status(401).json({ success: false, message: 'ERROR' })
+            const username = req.body.username;
+            const password = req.body.password;
+            User.findOne({ username: username },
+                'username password',
+                async function(err, user) {
+                    if (err) {
+                        return res
+                            .status(401)
+                            .json({ success: false, message: 'ERROR' });
+                    }
+                    if (!user) {
+                        return res.status(401).json({
+                            success: false,
+                            message: 'User doesnt exist',
+                        });
+                    }
+                    const passwordValid = await argon2.verify(
+                        user.password,
+                        password
+                    );
+                    if (!passwordValid) {
+                        return res.status(400).json({
+                            success: false,
+                            message: 'Wrong password',
+                        });
+                    }
+                    const tokens = generateToken(user);
+                    await User.updateOne({ username: username }, { $set: { refreshToken: tokens.refreshToken } });
+                    return res.status(200).json({ success: true, tokens });
                 }
-                if (!user) {
-                    return res.status(401).json({ success: false, message: 'User doesnt exist' })
-                }
-                const passwordValid = await argon2.verify(user.password, password)
-                if (!passwordValid) {
-                    return res.status(400).json({ success: false, message: 'Wrong password' })
-                }
-                const tokens = generateToken(user);
-                await User.updateOne({ username: username }, { $set: { refreshToken: tokens.refreshToken } });
-                return res.status(200).json({ success: true, tokens });
-            })
+            );
         } catch (err) {
-            return res.status(400).json({ success: false, message: 'ERROR' })
+            return res.status(400).json({ success: false, message: 'ERROR' });
         }
     };
 

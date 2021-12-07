@@ -5,7 +5,7 @@ const cors = require('cors');
 const route = require('./routes');
 const db = require('./config/db');
 
-db.connect()
+db.connect();
 const app = express();
 
 // Middleware
