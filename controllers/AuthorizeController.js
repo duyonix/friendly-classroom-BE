@@ -6,8 +6,6 @@ const argon2 = require('argon2');
 
 const generateToken = (payload) => {
     const { id, username } = payload;
-    console.log(id);
-    console.log(username);
     const accessToken = jwt.sign({ id, username },
         process.env.ACCESS_TOKEN_SECRET, {
             expiresIn: '1h',

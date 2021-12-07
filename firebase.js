@@ -1,12 +1,13 @@
-const admin = require('firebase-admin')
+const admin = require('firebase-admin');
 
 admin.initializeApp({
-    credential: admin.credential.cert(process.env.GOOGLE_APPLICATION_CREDENTIALS),
-    storageBucket: 'gs://friendlyclassroombe.appspot.com'
-})
+    credential: admin.credential.cert(
+        './friendlyclassroombe-firebase-adminsdk-iawwe-31df08dce9.json'
+    ),
+    storageBucket: 'gs://friendlyclassroombe.appspot.com',
+});
+const bucket = admin.storage().bucket();
 
-const bucket = admin.storage().bucket()
-    // console.log(bucket)
 module.exports = {
-    bucket
-}
+    bucket,
+};

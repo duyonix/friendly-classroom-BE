@@ -34,18 +34,18 @@ class DocumentController {
         const title = req.body.title
         console.log(classId)
         console.log(title)
-        try{
+        try {
             Document.findOne({ classId: classId, title: title }, function(err, document) {
                 if (err) {
                     return res.status(400).json({ success: false, message: 'Document doesnt exists' })
                 }
                 getDownloadURL(ref(storage, `document/${classId}/${title}/${document.attachedFiles[0]}`))
-                    .then(url=>{
-                        return res.status(200).json({document: document, downloadUrl: url})
+                    .then(url => {
+                        return res.status(200).json({ document: document, downloadUrl: url })
                     })
             })
-        }catch(err){
-            return res.status(400).json({success: false, message: 'ERROR'})
+        } catch (err) {
+            return res.status(400).json({ success: false, message: 'ERROR' })
         }
     }
 }

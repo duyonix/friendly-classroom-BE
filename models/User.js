@@ -1,38 +1,40 @@
 const mongoose = require('mongoose');
+// const ObjectId = require('ObjectId')
 
 const User = new mongoose.Schema({
-    username: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
-        minlength: 8,
+        username: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
+            minlength: 8,
+        },
+        password: {
+            type: String,
+            required: true,
+            minlength: 5,
+            select: false,
+        },
+        fullname: {
+            type: String,
+            required: true,
+        },
+        gmail: {
+            type: String,
+            required: true,
+        },
+        phoneNumber: {
+            type: String,
+            $regex: /(84|0[3|5|7|8|9])+([0-9]{8})\b/,
+        },
+        refreshToken: {
+            type: String,
+        },
+        /*class: [{
+            type: ObjectId()
+        }]*/
     },
-    password: {
-        type: String,
-        required: true,
-        minlength: 5,
-    },
-    gmail: {
-        type: String,
-        required: true,
-    },
-    fullname: {
-        type: String,
-        required: true,
-    },
-    phoneNumber: {
-        type: String,
-        $regex: /(84|0[3|5|7|8|9])+([0-9]{8})\b/
-    },
-    refreshToken: {
-        type: String,
-    },
-    classes: {
-        type: Array
-    }
-}, {
-    timestamps: true,
-});
+
+);
 
 module.exports = mongoose.model('User', User);

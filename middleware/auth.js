@@ -9,9 +9,8 @@ const verifyToken = (req, res, next) => {
     }
     try {
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-        console.log(decoded);
         req.userId = decoded.id;
-        req.username = decoded.username
+        req.username = decoded.username;
         next();
     } catch (error) {
         console.log(error);
