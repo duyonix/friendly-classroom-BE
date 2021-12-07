@@ -145,10 +145,14 @@ class ClassroomController {
 
             let updatedClassroom = await Classroom.findOne({ code: code });
 
-            if (!updatedClassroom || updatedClassroom.teacherId == req.userId)
+            if (
+                !updatedClassroom ||
+                updatedClassroom.teacherId == req.userId ||
+                classroom.listStudent.includes(req.userId)
+            )
                 return res.status(401).json({
                     success: false,
-                    message: 'Classroom not found or user is teacher',
+                    message: 'Classroom not found or user already in class',
                 });
 
             updatedClassroom.listStudent.push(req.userId);
@@ -161,6 +165,8 @@ class ClassroomController {
                     success: false,
                     message: 'Classroom not found or user not authorized',
                 });
+
+            // cập nhật list classroom for user
 
             res.json({
                 success: true,
@@ -177,7 +183,7 @@ class ClassroomController {
     };
     removeStudent = async (req, res) => {
         const { studentId } = req.body;
-
+        console.log(studentId);
         try {
             const classroomUpdateCondition = {
                 _id: req.params.classroomId,
@@ -187,8 +193,6 @@ class ClassroomController {
             let updatedClassroom = await Classroom.findOne(
                 classroomUpdateCondition
             );
-            updatedClassroom.listStudent.pull(studentId);
-            await updatedClassroom.save();
 
             // User not authorized to update classroom or classroom not found
             if (!updatedClassroom)
@@ -196,10 +200,14 @@ class ClassroomController {
                     success: false,
                     message: 'Classroom not found or user not authorized',
                 });
+            updatedClassroom.listStudent.pull({ _id: studentId });
+            await updatedClassroom.save();
+
+            // TODO: cập nhật danh sách classroom cũa user
 
             res.json({
                 success: true,
-                message: 'Remove classroom successfully',
+                message: 'Remove student from classroom successfully',
                 classroom: updatedClassroom,
             });
         } catch (error) {

@@ -1,51 +1,39 @@
-const Document = require('../models/Document')
-const fs = require('fs')
-const path = require('path')
-    // const formidable = require('formidable')
-
+const firebase = require('../firebase');
+const Document = require('../models/Document');
 
 class DocumentController {
-    upload = async(req, res) => {
-
-        const file = req.file
-        console.log(file)
-            // return res.status(200).json({ message: "success" })
-
-        console.log("Called")
-        var classId = '2'
-        var title = 'minhbaodeptrai'
-        var description = 'oke'
-        try {
-            fs.readFile(urlTestFile, 'latin1', async function(err, data) {
-                console.log(data)
-
-                if (err) throw err;
-                var newDocument = new Document({ classId, title, description, data })
-                await newDocument.save()
-                res.json({ message: "saved", data: data })
-            });
-        } catch (err) {
-            res.json({ message: "failed" })
-        }
-    }
-    download = async(req, res) => {
-        const documents = await Document.find()
-        var urlTestFile = path.join(__dirname, '../testingFolder/minhbao2.pdf')
-        fs.writeFile(urlTestFile, documents[0].data, 'latin1', function(err) {
-            if (err) {
-                return console.log(err);
+    upload = (req, res) => {
+        const classId = req.body.classId;
+        const title = req.body.title;
+        const description = req.body.description;
+        const creatorName = req.creatorName;
+        const file = req.file;
+        var options = {
+            destination: `document/${classId}/${title}/${file.filename}`,
+        };
+        firebase.bucket.upload(file.path, options, async function (err, item) {
+            try {
+                const attachedFiles = [file.filename];
+                console.log(attachedFiles);
+                const newDocument = new Document({
+                    classId,
+                    title,
+                    description,
+                    creatorName,
+                    attachedFiles,
+                });
+                console.log(newDocument);
+                await newDocument.save();
+                return res
+                    .status(200)
+                    .json({ success: true, message: 'Uploaded' });
+            } catch (err) {
+                console.log(err);
+                res.status(400).json({ success: false, message: 'ERROR' });
             }
-            var readstream = fs.createReadStream(urlTestFile)
-            readstream.on('open', function() {
-                readstream.pipe(res);
-            });
-            readstream.on('error', function(err) {
-                res.end(err);
-            });
-            console.log("The file was saved!");
         });
-
-    }
+    };
+    download = (req, res) => {};
 }
 
 module.exports = new DocumentController();

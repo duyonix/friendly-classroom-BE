@@ -1,23 +1,29 @@
-POST http://localhost:5001/api/61ab5d0864202bccfcbed4de/posts
+POST http://localhost:5001/api/61adf0f4cf5efc346cc0f0a0/post
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYTc5NWYxMjA2ZTgyZDdkNWUxMDA3YSIsInVzZXJuYW1lIjoiZGFtdGhpeHVhbnkiLCJpYXQiOjE2Mzg2MjAzODUsImV4cCI6MTYzODYzODM4NX0.XbHbDHihT68RZqlhitpbjsfbUu76zzQ9i--tBw_QyvY
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYWRlZGFlMDk0NTgzMGQ3NDBkNWJiOSIsInVzZXJuYW1lIjoiaGllbnZpMTIzIiwiaWF0IjoxNjM4ODAyNTg2LCJleHAiOjE2Mzg4Mzg1ODZ9.rFooGfCHHoqL5CIlHucG349cd9U2urEZV88i0WsVuS0
 
 {
-    "title": "bbaan",
+    "title": "aaaaaaui",
     "body": "ko làm bị trừ điểm"
 }
 
 
 ###
 
-GET http://localhost:5001/api/61ab5d0864202bccfcbed4de/posts/all
+GET http://localhost:5001/api/61ab5d0864202bccfcbed4de/post/all
 Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYTc5NWYxMjA2ZTgyZDdkNWUxMDA3YSIsInVzZXJuYW1lIjoiZGFtdGhpeHVhbnkiLCJpYXQiOjE2Mzg2MjAzODUsImV4cCI6MTYzODYzODM4NX0.XbHbDHihT68RZqlhitpbjsfbUu76zzQ9i--tBw_QyvY
+
 
 ###
 
-PUT http://localhost:5001/api/61ab5d0864202bccfcbed4de/posts/61ab5fc5de7cb0dfa504397f
+GET http://localhost:5001/api/61adf0f4cf5efc346cc0f0a0/post/61aead0ae00f5d0cb44a4d5d
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYWRlZGFlMDk0NTgzMGQ3NDBkNWJiOSIsInVzZXJuYW1lIjoiaGllbnZpMTIzIiwiaWF0IjoxNjM4ODAyNTg2LCJleHAiOjE2Mzg4Mzg1ODZ9.rFooGfCHHoqL5CIlHucG349cd9U2urEZV88i0WsVuS0
+
+###
+
+PUT http://localhost:5001/api/61adf0f4cf5efc346cc0f0a0/61aead0ae00f5d0cb44a4d5d
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYTc5NWYxMjA2ZTgyZDdkNWUxMDA3YSIsInVzZXJuYW1lIjoiZGFtdGhpeHVhbnkiLCJpYXQiOjE2Mzg2MjAzODUsImV4cCI6MTYzODYzODM4NX0.XbHbDHihT68RZqlhitpbjsfbUu76zzQ9i--tBw_QyvY
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYWRlZGFlMDk0NTgzMGQ3NDBkNWJiOSIsInVzZXJuYW1lIjoiaGllbnZpMTIzIiwiaWF0IjoxNjM4ODAyNTg2LCJleHAiOjE2Mzg4Mzg1ODZ9.rFooGfCHHoqL5CIlHucG349cd9U2urEZV88i0WsVuS0
 
 {
     "title": "cai post moi",
@@ -27,7 +33,7 @@ Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYTc5NWYxMjA2ZTgy
 
 ###
 
-DELETE http://localhost:5001/api/61ab5d0864202bccfcbed4de/posts/61ab77653737c7c596952dbc
+DELETE http://localhost:5001/api/61ab5d0864202bccfcbed4de/post/61ab77653737c7c596952dbc
 Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYTc5NWYxMjA2ZTgyZDdkNWUxMDA3YSIsInVzZXJuYW1lIjoiZGFtdGhpeHVhbnkiLCJpYXQiOjE2Mzg2MjAzODUsImV4cCI6MTYzODYzODM4NX0.XbHbDHihT68RZqlhitpbjsfbUu76zzQ9i--tBw_QyvY
 
 ###
@@ -37,6 +43,6 @@ POST http://localhost:5001/api/authorize/login
 Content-Type: application/json
 
 {
-    "username": "damthixuany",
-    "password": "1233456"
+    "username": "hienvi123",
+    "password": "hienvi123"
 }

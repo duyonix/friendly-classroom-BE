@@ -5,13 +5,20 @@ const postRoute = require('./posts.route');
 const auth = require('../middleware/auth');
 const classroomRoute = require('./classroom.route');
 const commentRoute = require('./comment.route');
+const accessClassroom = require('../middleware/accessClassroom');
+
+const classroomController = require('../controllers/ClassroomController');
 
 function route(app) {
     app.use('/api/authorize', authorizeRoute);
     app.use('/api/user', userRoute);
-    app.use('/api/:classroomId/posts', auth, postRoute);
-    app.use('/api/:classroomId/:postId', auth, commentRoute);
-    app.use('/api/classroom', auth, classroomRoute);
+
+    app.put('api/classroom/join', auth, classroomController.join);
+    app.post('api/classroom/create', auth, classroomController.create);
+
+    app.use('/api/:classroomId/post', auth, postRoute);
+    app.use('/api/:classroomId/:postId/comment', auth, commentRoute);
+    app.use('/api/:classroomId', auth, accessClassroom, classroomRoute);
 
     app.use('/api/document', documentRoute);
 }

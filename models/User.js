@@ -13,22 +13,22 @@ const User = new mongoose.Schema(
             type: String,
             required: true,
             minlength: 5,
-            // select: false,
+            select: false,
+        },
+        fullname: {
+            type: String,
+            required: true,
         },
         gmail: {
             type: String,
             required: true,
         },
-        sex: {
+        phoneNumber: {
             type: String,
-            required: true,
-            enum: ['male', 'female'],
+            $regex: /(84|0[3|5|7|8|9])+([0-9]{8})\b/,
         },
         refreshToken: {
             type: String,
-        },
-        classes: {
-            type: Array,
         },
     },
     {

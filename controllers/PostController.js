@@ -33,6 +33,30 @@ class PostController {
                     },
                 });
             res.json({ success: true, posts: classroom.listPost });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error',
+            });
+        }
+    };
+    // @route GET api/posts/all
+    // @desc Get posts
+    // @access Private
+    detail = async (req, res) => {
+        try {
+            const post = await Post.findById(req.params.postId)
+                .populate('postedBy listComment')
+                .sort('-createdAt')
+                .populate({
+                    path: 'listComment',
+                    populate: [{ path: 'commentedBy', select: 'username' }],
+                    options: {
+                        sort: { createdAt: -1 },
+                    },
+                });
+            res.json({ success: true, post: post });
             // TODO: SORT TIMESTAMP
         } catch (error) {
             console.log(error);
@@ -42,7 +66,6 @@ class PostController {
             });
         }
     };
-
     // @route POST api/posts
     // @desc Create post
     // @access Private
