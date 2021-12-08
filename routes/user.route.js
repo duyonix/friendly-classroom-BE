@@ -32,7 +32,8 @@ const auth = require('../middleware/auth')
 
 // router.get('/getInformation', auth, userController.upload)
 // router.post('/changeAvatar', auth, upload.single('avatar'), userController.upload)
-router.post('/changeAvatar', auth, upload.single('avatar'), userController.changeAvatar)
+// router.post('/changeAvatar', auth, upload.single('avatar'), userController.changeAvatar)
 router.get('/getInformation', auth, userController.getInformation)
+router.post('/changeAvatar', upload.single('avatar'), userController.changeAvatar)
 
 module.exports = router

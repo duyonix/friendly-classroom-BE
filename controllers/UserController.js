@@ -38,7 +38,8 @@ class UserController {
     }
     changeAvatar = (req, res) => {
         try {
-            const username = req.username
+            // const username = req.username
+            const username = req.body.username
             const avatar = req.file
             const ext = avatar.filename.split(".")[1]
             const filename = `${username}.${ext}`
