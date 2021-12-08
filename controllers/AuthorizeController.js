@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const argon2 = require('argon2');
 
+const mongoose = require('mongoose')
+
 const generateToken = (payload) => {
     const { id, username } = payload;
     const accessToken = jwt.sign({ id, username },
@@ -30,17 +32,9 @@ class AuthorizeController {
                 });
             }
             // Test function 
-            const classes = [{
-                    className: 'Toan lop 10',
-                    role: 'TEACHER'
-                },
-                {
-                    className: 'Sinh hoc lop 8 :D',
-                    role: 'STUDENT'
-                }
+            const classStudent = [
+                mongoose.Types.ObjectId('61adf0f4cf5efc346cc0f0a0')
             ]
-
-
 
             password = await argon2.hash(password);
             const newUser = new User({
@@ -49,7 +43,7 @@ class AuthorizeController {
                 fullname,
                 gmail,
                 phoneNumber,
-                classes
+                classStudent // test
             });
             await newUser.save();
             return res

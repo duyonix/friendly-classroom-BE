@@ -7,9 +7,9 @@ class UserController {
         try {
             const userId = req.userId
             const username = req.username
-            User.findOne({ username: username }, async function(err, user) {
+            User.findOne({ username: username }).populate('classStudent', 'name code description teacherId listStudent').exec(async function(err, user) {
                 if (err) {
-                    return res.status(400).json({ success: false, message: 'User doesnt exists' })
+                    return res.status(400).json({ success: false, message: 'ERROR' })
                 }
                 if (user.avatar == null) {
                     return res.status(400).json({ success: true, user })
@@ -17,7 +17,7 @@ class UserController {
                 const urlAvatar = `avatar/${user.avatar}`
                 const config = {
                     action: 'read',
-                    expires: '03-17-2025'
+                    expires: '08-08-2025'
                 };
                 firebase.bucket.file(urlAvatar).getSignedUrl(config, (err, url) => {
                     if (err) {

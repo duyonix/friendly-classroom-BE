@@ -25,18 +25,13 @@ const User = new mongoose.Schema({
         type: String,
         $regex: /(84|0[3|5|7|8|9])+([0-9]{8})\b/,
     },
-    classes: [{
-        id: {
-            type: ObjectId,
-            ref: 'Classroom',
-        },
-        role: {
-            type: String,
-            enum: ['TEACHER', 'STUDENT'],
-        },
-        className: {
-            type: String
-        }
+    classStudent: [{
+        type: ObjectId,
+        ref: 'Classroom'
+    }],
+    classTeacher: [{
+        type: ObjectId,
+        ref: 'Classroom'
     }],
     avatar: {
         type: String,
