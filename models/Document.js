@@ -17,11 +17,9 @@ const Document = new mongoose.Schema({
     creatorName: {
         type: String,
     },
-    attachedFiles: [
-        {
-            type: String,
-        },
-    ],
+    attachedFiles: [{
+        type: String,
+    }, ],
 });
 
 module.exports = mongoose.model('Document', Document);

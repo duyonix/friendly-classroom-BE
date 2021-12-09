@@ -1,31 +1,30 @@
-const { Binary } = require('bson')
 const mongoose = require('mongoose')
+const { ObjectId } = mongoose.Schema.Types
 
 const Homework = new mongoose.Schema({
     classId: {
-        type: String,
-        required: true
+        type: ObjectId,
+        ref: 'Classroom'
     },
     title: {
         type: String,
-        required: true,
-        minlength: 8
+        required: true
+    },
+    creatorId: {
+        type: ObjectId,
+        ref: 'User'
     },
     description: {
         type: String
     },
-    filename: {
-        type: String
-    },
-    createDate: {
-        type: Date
-    },
     deadline: {
         type: Date
     },
-    data: {
+    attachedFiles: [{
         type: String
-    }
+    }]
+}, {
+    timestamps: true
 })
 
 module.exports = mongoose.model('Homework', Homework)

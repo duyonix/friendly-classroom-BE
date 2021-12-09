@@ -1,9 +1,7 @@
 /* const { Router } = require('express')*/
 const jwt = require('jsonwebtoken');
-
 const User = require('../models/User');
 const argon2 = require('argon2');
-
 const mongoose = require('mongoose')
 
 const generateToken = (payload) => {
@@ -22,7 +20,7 @@ class AuthorizeController {
         var password = req.body.password;
         const gmail = req.body.gmail;
         const phoneNumber = req.body.phoneNumber;
-        const fullname = req.body.fullname;
+        const fullName = req.body.fullName;
         try {
             const user = await User.findOne({ username: username });
             if (user) {
@@ -40,7 +38,7 @@ class AuthorizeController {
             const newUser = new User({
                 username,
                 password,
-                fullname,
+                fullName,
                 gmail,
                 phoneNumber,
                 classStudent // test

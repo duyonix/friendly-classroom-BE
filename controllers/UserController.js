@@ -1,10 +1,12 @@
 const User = require("../models/User")
 const firebase = require('../firebase')
 const mongoose = require('mongoose')
+const { ObjectId } = mongoose.Schema.Types
 
 class UserController {
     getInformation = (req, res) => {
         try {
+            console.log('User')
             const userId = req.userId
             const username = req.username
             User.findOne({ username: username }).populate('classStudent', 'name code description teacherId listStudent').exec(async function(err, user) {
@@ -61,6 +63,32 @@ class UserController {
 
         }
 
+    }
+    isUserATeacherOfClass = async(userId, classId) => {
+        const user = await User.findOne({ _id: userId }, "classTeacher")
+        var isOK = false
+        user.classStudent.forEach(element => {
+            // console.log(element.toString())
+            // console.log(classId)
+            if (element.toString() === classId) {
+                isOK = true
+                return
+            }
+        });
+        return isOK
+    }
+    isUserAStudentOfClass = async(userId, classId) => {
+        const user = await User.findOne({ _id: userId }, "classStudent")
+        var isOK = false
+        user.classStudent.forEach(element => {
+            // console.log(element.toString())
+            // console.log(classId)
+            if (element.toString() === classId) {
+                isOK = true
+                return
+            }
+        });
+        return isOK
     }
 }
 

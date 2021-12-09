@@ -9,7 +9,7 @@ class DocumentController {
         const classId = req.body.classId
         const title = req.body.title
         const description = req.body.description
-        const creatorName = req.creatorName
+        const creatorName = req.body.username
 
         // auth access token
         const file = req.file
@@ -38,6 +38,9 @@ class DocumentController {
                 if (err) {
                     return res.status(400).json({ success: false, message: 'ERROR' })
                 }
+                if (!document) {
+                    return res.status(400).json({ success: false, message: 'Document doesnt exists' })
+                }
                 const urlFile = `document/${classId}/${title}/${document.attachedFiles[0]}`
                 const config = {
                     action: 'read',
@@ -60,6 +63,7 @@ class DocumentController {
             return res.status(400).json({ success: false, message: 'ERROR' })
         }
     }
+
 }
 
 module.exports = new DocumentController()
@@ -68,6 +72,6 @@ module.exports = new DocumentController()
 
 // storage
 //     + document
-//           . ClassName
+//           . classId
 //                - DocumentTitle
 //                       File
