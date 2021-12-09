@@ -18,7 +18,7 @@ class AuthorizeController {
     signup = async(req, res) => {
         const username = req.body.username;
         var password = req.body.password;
-        const gmail = req.body.gmail;
+        const email = req.body.email;
         const phoneNumber = req.body.phoneNumber;
         const fullName = req.body.fullName;
         try {
@@ -38,7 +38,7 @@ class AuthorizeController {
                 username,
                 password,
                 fullName,
-                gmail,
+                email,
                 phoneNumber,
                 classStudent // test
             });
