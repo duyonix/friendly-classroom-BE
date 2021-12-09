@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 const Classroom = require('../models/Classroom');
 
-const verifyAccessClassroom = async (req, res, next) => {
+const verifyAccessClassroom = async(req, res, next) => {
     try {
+        console.log("INN")
         const classroom = await Classroom.findById(req.params.classroomId)
             .select('teacherId listStudent')
             .lean();

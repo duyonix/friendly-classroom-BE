@@ -1,40 +1,44 @@
 const mongoose = require('mongoose');
-// const ObjectId = require('ObjectId')
+const { ObjectId } = mongoose.Schema.Types;
 
 const User = new mongoose.Schema({
-        username: {
-            type: String,
-            required: true,
-            unique: true,
-            trim: true,
-            minlength: 8,
-        },
-        password: {
-            type: String,
-            required: true,
-            minlength: 5,
-            select: false,
-        },
-        fullname: {
-            type: String,
-            required: true,
-        },
-        gmail: {
-            type: String,
-            required: true,
-        },
-        phoneNumber: {
-            type: String,
-            $regex: /(84|0[3|5|7|8|9])+([0-9]{8})\b/,
-        },
-        refreshToken: {
-            type: String,
-        },
-        /*class: [{
-            type: ObjectId()
-        }]*/
+    username: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+    },
+    password: {
+        type: String,
+        required: true,
+        select: false,
+    },
+    fullName: {
+        type: String,
+        required: true,
+    },
+    gmail: {
+        type: String,
+        required: true,
+    },
+    phoneNumber: {
+        type: String,
+        $regex: /(84|0[3|5|7|8|9])+([0-9]{8})\b/,
+    },
+    classStudent: [{
+        type: ObjectId,
+        ref: 'Classroom'
+    }],
+    classTeacher: [{
+        type: ObjectId,
+        ref: 'Classroom'
+    }],
+    avatar: {
+        type: String,
     },
 
-);
+}, {
+    timestamps: true,
+});
 
 module.exports = mongoose.model('User', User);
