@@ -4,29 +4,46 @@ const userController = require('./UserController')
 const mongoose = require('mongoose')
 const { ObjectId } = mongoose.Schema.Types
 
+const Classroom = require('../models/Classroom')
+
+saveHomeworkToMongodb = async(classId, title, creatorId, description, deadline, attachedFiles) => {
+    const newHomework = new Homework({ classId, title, creatorId, description, deadline, attachedFiles })
+    const result = await newHomework.save()
+    await Classroom.updateOne({ _id: classId }, { $push: { listHomework: result._id } })
+}
+
 class HomeworkController {
     createHomework = async(req, res) => {
         try {
             const file = req.file
-            const creatorId = req.body.creatorId
+            const creatorId = req.userId
             const classId = req.body.classId
             const title = req.body.title
             const description = req.body.description
             const deadline = req.body.deadline
 
-            /*const isValid = await userController.isUserATeacherOfClass(creatorId, classId)
+            const attachedFiles = []
+                // Only teacher of class can create homework
+            const isValid = await userController.isUserATeacherOfClass(creatorId, classId)
             if (!isValid) {
-                return res.status(400).json({ success: false, message: 'You dont have rights to create homework in this class' })
-            }*/
+                return res.status(400).json({ success: false, message: 'Only teacher can create homework' })
+            }
+
+            // "<YYYY-mm-ddTHH:MM:ssC>"
+            // const deadline = new Date(deadlineString)
+
+            if (!file) {
+                saveHomeworkToMongodb(classId, title, creatorId, description, deadline, attachedFiles)
+                return res.status(200).json({ success: true, message: "Homework is added" })
+            }
             const options = {
                 destination: `homework/${classId}/${title}/${file.filename}`
             }
-            firebase.bucket.upload(file.path, options, function(err, fileFirebase) {
-                const attachedFiles = [file.filename]
-                const newHomework = new Homework({ classId, title, creatorId, description, deadline, attachedFiles })
+            firebase.bucket.upload(file.path, options, async function(err, fileFirebase) {
+                attachedFiles.push(file.filename)
                 try {
-                    newHomework.save()
-                    return res.status(200).json({ success: true, message: 'Homework is added' })
+                    saveHomeworkToMongodb(classId, title, creatorId, description, deadline, attachedFiles)
+                    return res.status(200).json({ success: true, message: "Homework is added" })
                 } catch (err) {
                     console.log(err)
                     return res.status(400).json({ success: false, message: 'ERROR' })
@@ -74,6 +91,9 @@ class HomeworkController {
                 return res.status(400).json({ success: false, message: "Homework doesnt exists" })
             }
             console.log(homework)
+            if (homework.attachedFiles.length == 0) {
+                return res.status(200).json({ success: true, homework })
+            }
             const destinationFirebase = `homework/${homework.classId}/${homework.title}/${homework.attachedFiles[0]}`
             const config = {
                 action: 'read',

@@ -3,6 +3,8 @@ const firebase = require('../firebase')
 const mongoose = require('mongoose')
 const { ObjectId } = mongoose.Schema.Types
 
+const Homework = require('../models/Homework')
+
 class UserController {
     getInformation = (req, res) => {
         try {
@@ -41,7 +43,8 @@ class UserController {
     changeAvatar = (req, res) => {
         try {
             // const username = req.username
-            const username = req.body.username
+            const username = req.username
+            console.log(username)
             const avatar = req.file
             const ext = avatar.filename.split(".")[1]
             const filename = `${username}.${ext}`
@@ -54,6 +57,7 @@ class UserController {
                     console.log(err)
                     return res.status(400).json({ success: false, message: 'ERROR' })
                 }
+                console.log(filename)
                 await User.updateOne({ username: username }, { $set: { avatar: filename } });
                 return res.status(200).json({ success: true, message: 'Change avatar successfully' })
             })
@@ -67,7 +71,7 @@ class UserController {
     isUserATeacherOfClass = async(userId, classId) => {
         const user = await User.findOne({ _id: userId }, "classTeacher")
         var isOK = false
-        user.classStudent.forEach(element => {
+        user.classTeacher.forEach(element => {
             // console.log(element.toString())
             // console.log(classId)
             if (element.toString() === classId) {
@@ -89,6 +93,13 @@ class UserController {
             }
         });
         return isOK
+    }
+    isUserAMemberOfClass = async(userId, classId) => {
+        const user = await User.findOne({ _id: userId }, "classStudent classTeacher")
+        if (classId in user.classStudent || classId in user.classTeacher) {
+            return true
+        }
+        return false
     }
 
 }

@@ -7,6 +7,10 @@ const Todo = new mongoose.Schema({
         type: ObjectId,
         ref: 'User'
     },
+    status: {
+        type: String,
+        enum: ['FINISHED', 'NOT FINISHED']
+    },
     homeworkNeedToDo: [{
         type: ObjectId,
         ref: 'Homework'

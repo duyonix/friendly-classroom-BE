@@ -7,6 +7,7 @@ const verifyToken = (req, res, next) => {
     }
     try {
         const splited = token.split(' ')
+        console.log(splited)
         if (splited[0] != "Bearer") {
             return res.sendStatus(401);
         }

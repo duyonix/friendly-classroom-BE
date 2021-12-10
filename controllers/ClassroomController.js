@@ -7,7 +7,7 @@ class ClassroomController {
     // @route GET api/posts
     // @desc Get posts
     // @access Private
-    get = async (req, res) => {
+    get = async(req, res) => {
         try {
             const classroom = await Classroom.findById(req.params.classroomId);
             res.json({ success: true, classroom });
@@ -23,7 +23,7 @@ class ClassroomController {
     // @route POST api/posts
     // @desc Create post
     // @access Private
-    create = async (req, res) => {
+    create = async(req, res) => {
         const { name, description } = req.body;
         if (!name || !description)
             return res
@@ -43,13 +43,18 @@ class ClassroomController {
                 description,
                 teacherId: req.userId,
             });
-            await newClassroom.save();
+            const result = await newClassroom.save();
             res.json({
                 success: true,
                 message: 'Create new classroom successfully',
                 classroom: newClassroom,
                 userId: req.userId,
             });
+
+            // Add classroom id to classTeacher
+            await User.findOneAndUpdate({ _id: req.userId }, { $push: { classTeacher: result._id } })
+
+
         } catch (error) {
             console.log(error);
             res.status(500).json({
@@ -61,7 +66,7 @@ class ClassroomController {
     // @route PUT api/posts
     // @desc Update post
     // @access Private
-    update = async (req, res) => {
+    update = async(req, res) => {
         const { name, description } = req.body;
 
         try {
@@ -71,12 +76,10 @@ class ClassroomController {
             };
 
             let updatedClassroom = await Classroom.findOneAndUpdate(
-                classroomUpdateCondition,
-                {
+                classroomUpdateCondition, {
                     name,
                     description,
-                },
-                { new: true }
+                }, { new: true }
             );
 
             // User not authorized to update classroom or classroom not found
@@ -103,7 +106,7 @@ class ClassroomController {
     // @route DELETE api/posts
     // @desc Delete post
     // @access Private
-    delete = async (req, res) => {
+    delete = async(req, res) => {
         try {
             const classroomDeleteCondition = {
                 _id: req.params.classroomId,
@@ -133,7 +136,7 @@ class ClassroomController {
         }
     };
 
-    join = async (req, res) => {
+    join = async(req, res) => {
         const { code } = req.body;
 
         try {
@@ -144,9 +147,7 @@ class ClassroomController {
             // khác teacherId
 
             let updatedClassroom = await Classroom.findOne({ code: code });
-
-            if (
-                !updatedClassroom ||
+            if (!updatedClassroom ||
                 updatedClassroom.teacherId == req.userId ||
                 classroom.listStudent.includes(req.userId)
             )
@@ -158,6 +159,9 @@ class ClassroomController {
             updatedClassroom.listStudent.push(req.userId);
             await updatedClassroom.save();
             // TODO: cập nhật danh sách classroom cũa user
+            let updatedMember = await User.findOne({ _id: req.userId })
+            updatedMember.classStudent.push(updatedClassroom._id)
+            await updatedMember.save()
 
             // User not authorized to update classroom or classroom not found
             if (!updatedClassroom)
@@ -181,7 +185,7 @@ class ClassroomController {
             });
         }
     };
-    removeStudent = async (req, res) => {
+    removeStudent = async(req, res) => {
         const { studentId } = req.body;
         console.log(studentId);
         try {
@@ -204,6 +208,8 @@ class ClassroomController {
             await updatedClassroom.save();
 
             // TODO: cập nhật danh sách classroom cũa user
+            let updatedMember = await User.findOne({ _id: studentId })
+            updatedMember.classStudent.pull()
 
             res.json({
                 success: true,
@@ -218,7 +224,7 @@ class ClassroomController {
             });
         }
     };
-    people = async (req, res) => {
+    people = async(req, res) => {
         try {
             const classroom = await Classroom.findById(req.params.classroomId)
                 .select('teacherId listStudent')

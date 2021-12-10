@@ -21,6 +21,7 @@ class AuthorizeController {
         const email = req.body.email;
         const phoneNumber = req.body.phoneNumber;
         const fullName = req.body.fullName;
+        const gender = req.body.gender
         try {
             const user = await User.findOne({ username });
             if (user) {
@@ -28,10 +29,6 @@ class AuthorizeController {
                     .status(400)
                     .json({ success: false, message: 'Username already taken' });
             }
-            // Test function 
-            const classStudent = [
-                mongoose.Types.ObjectId('61adf0f4cf5efc346cc0f0a0')
-            ]
 
             password = await argon2.hash(password);
             const newUser = new User({
@@ -40,6 +37,7 @@ class AuthorizeController {
                 fullName,
                 email,
                 phoneNumber,
+                gender,
                 classStudent // test
             });
             await newUser.save();

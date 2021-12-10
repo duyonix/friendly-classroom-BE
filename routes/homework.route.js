@@ -1,6 +1,7 @@
 const router = require('express').Router();
 
 const homeworkController = require('../controllers/HomeworkController');
+const auth = require('../middleware/auth')
 
 const multer = require('multer');
 var storage = multer.diskStorage({
@@ -16,7 +17,7 @@ const upload = multer({
     storage: storage,
 });
 
-router.post('/createHomework', upload.single('file'), homeworkController.createHomework)
+router.post('/createHomework', auth, upload.single('file'), homeworkController.createHomework)
 router.post('/removeHomework', homeworkController.removeHomework)
 router.post('/getAllHomeworkMetadataOfClass', homeworkController.getAllHomeworkMetadataOfClass)
 router.post('/getHomeworkDetail', homeworkController.getHomeworkDetail)
