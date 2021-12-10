@@ -21,7 +21,6 @@ class AuthorizeController {
         const email = req.body.email;
         const phoneNumber = req.body.phoneNumber;
         const fullName = req.body.fullName;
-        const gender = req.body.gender
         try {
             const user = await User.findOne({ username });
             if (user) {
@@ -36,13 +35,12 @@ class AuthorizeController {
                 password,
                 fullName,
                 email,
-                phoneNumber,
-                gender,
-                classStudent // test
+                phoneNumber
             });
             await newUser.save();
             res.status(200).json({ success: true, message: 'User is added' });
         } catch (err) {
+            console.log(err)
             res.status(400).json({ success: false, message: 'ERROR' });
         }
     };
