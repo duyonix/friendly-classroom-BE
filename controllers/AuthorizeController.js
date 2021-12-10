@@ -24,9 +24,10 @@ class AuthorizeController {
         try {
             const user = await User.findOne({ username });
             if (user) {
-                return res
+                /* return res
                     .status(400)
-                    .json({ success: false, message: 'Username already taken' });
+                    .json({ success: false, message: 'Username already taken' }); */
+                throw new Error("Username already taken")
             }
 
             password = await argon2.hash(password);
@@ -40,46 +41,61 @@ class AuthorizeController {
             await newUser.save();
             res.status(200).json({ success: true, message: 'User is added' });
         } catch (err) {
-            console.log(err)
-            res.status(400).json({ success: false, message: 'ERROR' });
+            if (err.message == "Username already taken") {
+                res
+                    .status(400)
+                    .json({ success: false, message: 'Username already taken' });
+            } else {
+                console.log(err)
+                res.status(400).json({ success: false, message: 'ERROR' });
+            }
+
         }
     };
 
     login = async(req, res) => {
-        try {
-            const username = req.body.username;
-            const password = req.body.password;
-            User.findOne({ username: username },
-                'username password',
-                async function(err, user) {
+        const username = req.body.username;
+        const password = req.body.password;
+        User.findOne({ username: username },
+            'username password',
+            async function(err, user) {
+                try {
                     if (err) {
-                        return res
+                        /* return res
                             .status(401)
-                            .json({ success: false, message: 'ERROR' });
+                            .json({ success: false, message: 'ERROR' }); */
+                        throw new Error("ERROR")
                     }
                     if (!user) {
-                        return res.status(401).json({
+                        /*return res.status(401).json({
                             success: false,
                             message: 'User doesnt exist',
-                        });
+                        });*/
+                        throw new Error("User doesnt exist")
                     }
                     const passwordValid = await argon2.verify(
                         user.password,
                         password
                     );
                     if (!passwordValid) {
-                        return res.status(400).json({
+                        /* return res.status(400).json({
                             success: false,
                             message: 'Wrong password',
-                        });
+                        }); */
+                        throw new Error("Wrong password")
                     }
                     const token = generateToken(user);
                     return res.status(200).json({ success: true, token });
+                } catch (err) {
+                    if (err.message == "Wrong password")
+                        return res.status(400).json({ success: false, message: 'Wrong password' })
+                    else if (err.message == "User doesnt exist")
+                        return res.status(400).json({ success: false, message: 'User doesnt exist' })
+                    else return res.status(400).json({ success: false, message: 'ERROR' })
                 }
-            );
-        } catch (err) {
-            return res.status(400).json({ success: false, message: 'ERROR' });
-        }
+            }
+        );
+
     };
 }
 
