@@ -18,7 +18,7 @@ class UserController {
                         throw new Error('ERROR')
                     }
                 } catch (err) {
-                    return res.status(400).json({ success: false, message: 'ERROR' })
+                    return res.status(400).json({ success: false, message: 'Lỗi rồi :(' })
                 }
                 if (user.avatar == null) {
                     return res.status(400).json({ success: true, user })
@@ -35,7 +35,7 @@ class UserController {
                             throw new Error('ERROR')
                         }
                     } catch (err) {
-                        return res.status(400).json({ success: false, message: 'ERROR' })
+                        return res.status(400).json({ success: false, message: 'Lỗi rồi :(' })
                     }
                     return res.status(200).json({ success: true, user, avatarURL: url })
 

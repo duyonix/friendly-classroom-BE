@@ -39,15 +39,15 @@ class AuthorizeController {
                 phoneNumber
             });
             await newUser.save();
-            res.status(200).json({ success: true, message: 'User is added' });
+            res.status(200).json({ success: true, message: 'Người dùng đã được tạo' });
         } catch (err) {
             if (err.message == "Username already taken") {
                 res
                     .status(400)
-                    .json({ success: false, message: 'Username already taken' });
+                    .json({ success: false, message: 'Tên tài khoản đã tồn tại' });
             } else {
                 console.log(err)
-                res.status(400).json({ success: false, message: 'ERROR' });
+                res.status(400).json({ success: false, message: 'Lỗi rồi :(' });
             }
 
         }
@@ -88,10 +88,10 @@ class AuthorizeController {
                     return res.status(200).json({ success: true, token });
                 } catch (err) {
                     if (err.message == "Wrong password")
-                        return res.status(400).json({ success: false, message: 'Wrong password' })
+                        return res.status(400).json({ success: false, message: 'Sai mật khẩu' })
                     else if (err.message == "User doesnt exist")
-                        return res.status(400).json({ success: false, message: 'User doesnt exist' })
-                    else return res.status(400).json({ success: false, message: 'ERROR' })
+                        return res.status(400).json({ success: false, message: 'Người dùng này không tồn tại' })
+                    else return res.status(400).json({ success: false, message: 'Lỗi rồi :(' })
                 }
             }
         );
