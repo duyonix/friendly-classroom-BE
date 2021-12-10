@@ -12,7 +12,12 @@ class UserController {
             const userId = req.userId
             const username = req.username
             User.findOne({ username: username }).populate('classStudent', 'name code description teacherId listStudent').exec(async function(err, user) {
-                if (err) {
+                try {
+                    if (err) {
+                        // return res.status(400).json({ success: false, message: 'ERROR' })
+                        throw new Error('ERROR')
+                    }
+                } catch (err) {
                     return res.status(400).json({ success: false, message: 'ERROR' })
                 }
                 if (user.avatar == null) {
@@ -24,8 +29,13 @@ class UserController {
                     expires: '08-08-2025'
                 };
                 firebase.bucket.file(urlAvatar).getSignedUrl(config, (err, url) => {
-                    if (err) {
-                        return res.status(400).json({ success: true, message: 'ERROR' })
+                    try {
+                        if (err) {
+                            // return res.status(400).json({ success: false, message: 'ERROR' })
+                            throw new Error('ERROR')
+                        }
+                    } catch (err) {
+                        return res.status(400).json({ success: false, message: 'ERROR' })
                     }
                     return res.status(200).json({ success: true, user, avatarURL: url })
 
@@ -53,10 +63,16 @@ class UserController {
                 destination: filePath,
             };
             firebase.bucket.upload(avatar.path, options, async(err, item) => {
-                if (err) {
-                    console.log(err)
+                try {
+                    if (err) {
+                        console.log(err)
+                            // return res.status(400).json({ success: false, message: 'ERROR' })
+                        throw new Error('ERROR')
+                    }
+                } catch (err) {
                     return res.status(400).json({ success: false, message: 'ERROR' })
                 }
+
                 console.log(filename)
                 await User.updateOne({ username: username }, { $set: { avatar: filename } });
                 return res.status(200).json({ success: true, message: 'Change avatar successfully' })

@@ -30,9 +30,15 @@ class DocumentController {
             })
 
         console.log(classroomDocument)
-        if (classroomDocument.listDocument.length > 0) {
+        try {
+            if (classroomDocument.listDocument.length > 0) {
+                // return res.status(400).json({ success: false, message: "1 lop khong the co 2 document cung ten" })
+                throw new Error("2 documents have same name in 1 class")
+            }
+        } catch (err) {
             return res.status(400).json({ success: false, message: "1 lop khong the co 2 document cung ten" })
         }
+
         const file = req.file
         console.log(file)
         if (!file) {
@@ -70,13 +76,24 @@ class DocumentController {
 
 
             Document.findOne({ classId: classId, title: title }, function(err, document) {
-                if (err) {
-                    return res.status(400).json({ success: false, message: 'ERROR' })
+                try {
+                    if (err) {
+                        // return res.status(400).json({ success: false, message: 'ERROR' })
+                        throw new Error('ERROR')
+                    }
+                    if (!document) {
+                        // return res.status(400).json({ success: false, message: 'Document doesnt exist' })
+                        throw new Error('Document doesnt exist')
+                    }
+                } catch (err) {
+                    // return res.status(400).json({ success: false, message: 'ERROR' })
+                    if (err.message == 'Document doesnt exist')
+                        return res.status(400).json({ success: false, message: 'Document doesnt exist' })
+                    else {
+                        return res.status(400).json({ success: false, message: 'ERROR' })
+                    }
                 }
-                if (!document) {
-                    return res.status(400).json({ success: false, message: 'Document doesnt exists' })
-                }
-                console.log(document.attachedFiles.length)
+                // console.log(document.attachedFiles.length)
                 if (document.attachedFiles.length == 0) {
                     return res.status(200).json({ success: true, document })
                 }
@@ -86,7 +103,12 @@ class DocumentController {
                     expires: '03-17-2025'
                 };
                 firebase.bucket.file(urlFile).getSignedUrl(config, function(err, url) {
-                    if (err) {
+                    try {
+                        if (err) {
+                            // return res.status(400).json({ success: false, message: 'ERROR' })
+                            throw new Error('ERROR')
+                        }
+                    } catch (err) {
                         return res.status(400).json({ success: false, message: 'ERROR' })
                     }
                     return res.status(200).json({ success: true, document, downloadURL: url })
