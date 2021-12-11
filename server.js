@@ -5,7 +5,11 @@ const cors = require('cors');
 const route = require('./routes');
 const db = require('./config/db');
 
-db.connect();
+
+
+// connect to database mongodb
+db.connect()
+
 const app = express();
 
 // Middleware
@@ -14,7 +18,7 @@ app.use(cors());
 
 route(app);
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
     console.log(`Server listen on ${PORT}`);

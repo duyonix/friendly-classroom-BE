@@ -9,9 +9,9 @@
 </head>
 
 <body>
-    <form action="http://localhost:5001/api/document/download" method="post" enctype="multipart/form-data">
-        <input type="text" name="classId" />
-        <input type="text" name="title" />
+    <form enctype="multipart/form-data" method="post" action="http://localhost:5000/api/user/changeAvatar">
+        <input type="file" name="avatar" />
+        <input type="text" name="username" />
         <input type="submit" text="Submit" />
     </form>
 </body>

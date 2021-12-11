@@ -1,133 +1,101 @@
 /* const { Router } = require('express')*/
 const jwt = require('jsonwebtoken');
-
 const User = require('../models/User');
 const argon2 = require('argon2');
+const mongoose = require('mongoose')
 
 const generateToken = (payload) => {
     const { id, username } = payload;
-    const accessToken = jwt.sign(
-        { id, username },
-        process.env.ACCESS_TOKEN_SECRET,
-        {
+    const accessToken = jwt.sign({ id, username },
+        process.env.ACCESS_TOKEN_SECRET, {
             expiresIn: '10h',
         }
     );
-    const refreshToken = jwt.sign(
-        { id, username },
-        process.env.REFRESH_TOKEN_SECRET,
-        {
-            expiresIn: '5h',
-        }
-    );
-    return { accessToken, refreshToken };
+    return accessToken
 };
 
 class AuthorizeController {
-    signup = async (req, res) => {
+    signup = async(req, res) => {
         const username = req.body.username;
         var password = req.body.password;
-        const gmail = req.body.gmail;
+        const email = req.body.email;
         const phoneNumber = req.body.phoneNumber;
-        const fullname = req.body.fullname;
+        const fullName = req.body.fullName;
         try {
-            const user = await User.findOne({ username: username });
+            const user = await User.findOne({ username });
             if (user) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Username already taken',
-                });
+                /* return res
+                    .status(400)
+                    .json({ success: false, message: 'Username already taken' }); */
+                throw new Error("Username already taken")
             }
+
             password = await argon2.hash(password);
             const newUser = new User({
                 username,
                 password,
-                fullname,
-                gmail,
-                phoneNumber,
+                fullName,
+                email,
+                phoneNumber
             });
             await newUser.save();
-            return res
-                .status(200)
-                .json({ success: true, message: 'User is added' });
+            res.status(200).json({ success: true, message: 'Người dùng đã được tạo' });
         } catch (err) {
-            console.log(err);
-            res.status(400).json({ success: false, message: 'ERROR' });
+            if (err.message == "Username already taken") {
+                res
+                    .status(400)
+                    .json({ success: false, message: 'Tên tài khoản đã tồn tại' });
+            } else {
+                console.log(err)
+                res.status(400).json({ success: false, message: 'Lỗi rồi :(' });
+            }
+
         }
     };
 
-    login = async (req, res) => {
-        try {
-            const username = req.body.username;
-            const password = req.body.password;
-            User.findOne(
-                { username: username },
-                'username password',
-                async function (err, user) {
+    login = async(req, res) => {
+        const username = req.body.username;
+        const password = req.body.password;
+        User.findOne({ username: username },
+            'username password',
+            async function(err, user) {
+                try {
                     if (err) {
-                        return res
+                        /* return res
                             .status(401)
-                            .json({ success: false, message: 'ERROR' });
+                            .json({ success: false, message: 'ERROR' }); */
+                        throw new Error("ERROR")
                     }
                     if (!user) {
-                        return res.status(401).json({
+                        /*return res.status(401).json({
                             success: false,
                             message: 'User doesnt exist',
-                        });
+                        });*/
+                        throw new Error("User doesnt exist")
                     }
                     const passwordValid = await argon2.verify(
                         user.password,
                         password
                     );
                     if (!passwordValid) {
-                        return res.status(400).json({
+                        /* return res.status(400).json({
                             success: false,
                             message: 'Wrong password',
-                        });
+                        }); */
+                        throw new Error("Wrong password")
                     }
-                    const tokens = generateToken(user);
-                    await User.updateOne(
-                        { username: username },
-                        { $set: { refreshToken: tokens.refreshToken } }
-                    );
-                    return res.status(200).json({ success: true, tokens });
+                    const token = generateToken(user);
+                    return res.status(200).json({ success: true, token });
+                } catch (err) {
+                    if (err.message == "Wrong password")
+                        return res.status(400).json({ success: false, message: 'Sai mật khẩu' })
+                    else if (err.message == "User doesnt exist")
+                        return res.status(400).json({ success: false, message: 'Người dùng này không tồn tại' })
+                    else return res.status(400).json({ success: false, message: 'Lỗi rồi :(' })
                 }
-            );
-        } catch (err) {
-            return res.status(400).json({ success: false, message: 'ERROR' });
-        }
-    };
-
-    refreshToken = async (req, res) => {
-        const refreshToken = req.body.refreshToken;
-        if (!refreshToken) {
-            return res.sendStatus(401);
-        }
-        const user = User.find({ refreshToken: refreshToken });
-        if (!user) {
-            return res.sendStatus(403);
-        }
-        try {
-            jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-            const tokens = generateToken(user);
-            await User.updateOne(
-                { username: user.username },
-                { $set: { refreshToken: tokens.refreshToken } }
-            );
-            res.status(200);
-            res.json(tokens);
-        } catch (error) {
-            res.sendStatus(403);
-        }
-    };
-
-    logout = async (req, res) => {
-        console.log(req.userId);
-        await User.updateOne(
-            { _id: req.userId },
-            { $set: { refreshToken: null } }
+            }
         );
-        res.status(200).json({ Message: 'Success' });
+
     };
 }
 

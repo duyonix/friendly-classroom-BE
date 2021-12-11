@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Schema.Types;
 
 const User = new mongoose.Schema(
     {
@@ -7,15 +8,13 @@ const User = new mongoose.Schema(
             required: true,
             unique: true,
             trim: true,
-            minlength: 8,
         },
         password: {
             type: String,
             required: true,
-            minlength: 5,
             select: false,
         },
-        fullname: {
+        fullName: {
             type: String,
             required: true,
         },
@@ -27,9 +26,20 @@ const User = new mongoose.Schema(
             type: String,
             $regex: /(84|0[3|5|7|8|9])+([0-9]{8})\b/,
         },
-        refreshToken: {
+        classStudent: [
+            {
+                type: ObjectId,
+                ref: 'Classroom',
+            },
+        ],
+        classTeacher: [
+            {
+                type: ObjectId,
+                ref: 'Classroom',
+            },
+        ],
+        avatar: {
             type: String,
-            select: false,
         },
     },
     {
