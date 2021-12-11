@@ -19,7 +19,7 @@ const User = new mongoose.Schema(
             type: String,
             required: true,
         },
-        gmail: {
+        email: {
             type: String,
             required: true,
         },
@@ -29,6 +29,7 @@ const User = new mongoose.Schema(
         },
         refreshToken: {
             type: String,
+            select: false,
         },
     },
     {
