@@ -6,15 +6,8 @@ const Classroom = require('../models/Classroom');
 const Comment = require('../models/Comment');
 
 class CommentController {
-    // @route POST api/posts
-    // @desc Create post
-    // @access Private
     create = async (req, res) => {
         const { body } = req.body;
-        if (!body)
-            return res
-                .status(400)
-                .json({ success: false, message: 'Please add all the fields' });
 
         try {
             const newComment = new Comment({
@@ -34,7 +27,7 @@ class CommentController {
             );
             res.json({
                 success: true,
-                message: 'Create new comment successfully',
+                message: 'comment thành công',
                 comment: newComment,
                 post: updatedPost,
             });
@@ -42,21 +35,13 @@ class CommentController {
             console.log(error);
             res.status(500).json({
                 success: false,
-                message: 'Internal server error',
+                message: 'Lỗi rồi :(',
             });
         }
     };
-    // @route PUT api/posts
-    // @desc Update post
-    // @access Private
+
     update = async (req, res) => {
         const { body } = req.body;
-
-        // Simple validation
-        if (!body)
-            return res
-                .status(400)
-                .json({ success: false, message: 'Body is required' });
 
         try {
             const commentUpdateCondition = {
@@ -73,29 +58,31 @@ class CommentController {
             );
 
             // User not authorized to update post or post not found
-            if (!updatedComment)
-                return res.status(401).json({
-                    success: false,
-                    message: 'Comment not found or user not authorized',
-                });
+            if (!updatedComment) {
+                throw new Error(
+                    'Không tìm thấy comment hoặc user không có quyền chỉnh sửa comment này'
+                );
+            }
 
             res.json({
                 success: true,
-                message: 'Update comment successfully',
+                message: 'Cập nhật comment thành công',
                 comment: updatedComment,
             });
         } catch (error) {
+            if (error.message)
+                res.status(400).json({
+                    success: false,
+                    message: error.message,
+                });
             console.log(error);
             res.status(500).json({
                 success: false,
-                message: 'Internal server error',
+                message: 'Lỗi rồi :(',
             });
         }
     };
 
-    // @route DELETE api/posts
-    // @desc Delete post
-    // @access Private
     delete = async (req, res) => {
         try {
             const commentDeleteCondition = {
@@ -111,22 +98,28 @@ class CommentController {
                 commentDeleteCondition
             );
 
-            if (!deleteComment)
-                return res.status(401).json({
-                    success: false,
-                    message: 'Comment not found or user not authorized',
-                });
+            if (!deleteComment) {
+                throw new Error(
+                    'Không tìm thấy comment hoặc user không có quyền xóa comment này'
+                );
+            }
 
             res.json({
                 success: true,
+                message: 'Xóa comment thành công',
                 comment: deleteComment,
                 post: updatedPost,
             });
         } catch (error) {
+            if (error.message)
+                res.status(400).json({
+                    success: false,
+                    message: error.message,
+                });
             console.log(error);
             res.status(500).json({
                 success: false,
-                message: 'Internal server error',
+                message: 'Lỗi rồi :(',
             });
         }
     };
