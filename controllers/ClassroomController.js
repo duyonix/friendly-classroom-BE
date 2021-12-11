@@ -36,12 +36,13 @@ class ClassroomController {
             while (await Classroom.findOne({ code: code })) {
                 code = Math.random().toString(36).substring(2, 8);
             }
-
+            var numberOfStudent = 0 // MB them vo
             const newClassroom = new Classroom({
                 name,
                 code,
                 description,
                 teacherId: req.userId,
+                numberOfStudent // MinhBao them vo
             });
             const result = await newClassroom.save();
             res.json({
@@ -157,7 +158,11 @@ class ClassroomController {
                 });
 
             updatedClassroom.listStudent.push(req.userId);
+
+            var numberOfStudent = updatedClassroom.numberOfStudent
+            updatedClassroom.numberOfStudent = numberOfStudent + 1
             await updatedClassroom.save();
+
             // TODO: cập nhật danh sách classroom cũa user
             let updatedMember = await User.findOne({ _id: req.userId })
             updatedMember.classStudent.push(updatedClassroom._id)
@@ -205,6 +210,8 @@ class ClassroomController {
                     message: 'Classroom not found or user not authorized',
                 });
             updatedClassroom.listStudent.pull({ _id: studentId });
+
+            updatedClassroom.numberOfStudent = updatedClassroom.numberOfStudent - 1
             await updatedClassroom.save();
 
             // TODO: cập nhật danh sách classroom cũa user

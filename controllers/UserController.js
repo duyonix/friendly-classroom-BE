@@ -13,11 +13,12 @@ class UserController {
             const username = req.username
             User.findOne({ username: username }).populate({
                 path: 'classStudent classTeacher',
-                select: 'name code description teacherId listStudent',
+                select: 'name code description teacherId numberOfStudent',
                 populate: {
                     path: 'teacherId',
-                    // select: 'username'
-                }
+                    select: 'username'
+                },
+
             }).exec(async function(err, user) {
                 try {
                     if (err) {
