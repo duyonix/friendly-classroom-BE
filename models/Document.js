@@ -1,5 +1,6 @@
 const { Binary } = require('bson');
 const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Schema.Types
 
 const Document = new mongoose.Schema({
     classId: {
@@ -8,14 +9,14 @@ const Document = new mongoose.Schema({
     },
     title: {
         type: String,
-        required: true,
-        minlength: 8,
+        required: true
     },
     description: {
         type: String,
     },
-    creatorName: {
-        type: String,
+    creatorId: {
+        type: ObjectId,
+        ref: 'User'
     },
     attachedFiles: [{
         type: String,

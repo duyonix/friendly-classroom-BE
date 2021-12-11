@@ -36,6 +36,10 @@ const User = new mongoose.Schema({
     avatar: {
         type: String,
     },
+    todo: [{
+        type: ObjectId,
+        ref: 'Homework'
+    }]
 
 }, {
     timestamps: true,

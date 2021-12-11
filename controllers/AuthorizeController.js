@@ -61,16 +61,9 @@ class AuthorizeController {
             async function(err, user) {
                 try {
                     if (err) {
-                        /* return res
-                            .status(401)
-                            .json({ success: false, message: 'ERROR' }); */
                         throw new Error("ERROR")
                     }
                     if (!user) {
-                        /*return res.status(401).json({
-                            success: false,
-                            message: 'User doesnt exist',
-                        });*/
                         throw new Error("User doesnt exist")
                     }
                     const passwordValid = await argon2.verify(
@@ -78,10 +71,6 @@ class AuthorizeController {
                         password
                     );
                     if (!passwordValid) {
-                        /* return res.status(400).json({
-                            success: false,
-                            message: 'Wrong password',
-                        }); */
                         throw new Error("Wrong password")
                     }
                     const token = generateToken(user);
