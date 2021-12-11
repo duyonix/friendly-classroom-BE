@@ -11,7 +11,14 @@ class UserController {
             console.log('User')
             const userId = req.userId
             const username = req.username
-            User.findOne({ username: username }).populate('classStudent', 'name code description teacherId listStudent').exec(async function(err, user) {
+            User.findOne({ username: username }).populate({
+                path: 'classStudent classTeacher',
+                select: 'name code description teacherId listStudent',
+                populate: {
+                    path: 'teacherId',
+                    // select: 'username'
+                }
+            }).exec(async function(err, user) {
                 try {
                     if (err) {
                         // return res.status(400).json({ success: false, message: 'ERROR' })
