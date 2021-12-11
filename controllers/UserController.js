@@ -18,7 +18,7 @@ class UserController {
                     select: 'username'
                 },
 
-            }).exec(async function(err, user) {
+            }).exec(async function (err, user) {
                 try {
                     if (err) {
                         // return res.status(400).json({ success: false, message: 'ERROR' })
@@ -28,7 +28,7 @@ class UserController {
                     return res.status(400).json({ success: false, message: 'Lỗi rồi :(' })
                 }
                 if (user.avatar == null) {
-                    return res.status(400).json({ success: true, user })
+                    return res.status(200).json({ success: true, user }) // Duy Đặng đổi status 400 thành 200 để trả về thông tin user
                 }
                 const urlAvatar = `avatar/${user.avatar}`
                 const config = {
@@ -47,7 +47,7 @@ class UserController {
                     return res.status(200).json({ success: true, user, avatarURL: url })
 
                     const file = fs.createWriteStream("./uploads/files.pdf");
-                    const request = https.get(url, function(response) {
+                    const request = https.get(url, function (response) {
                         response.pipe(file);
                     });
                 });
@@ -69,11 +69,11 @@ class UserController {
             var options = {
                 destination: filePath,
             };
-            firebase.bucket.upload(avatar.path, options, async(err, item) => {
+            firebase.bucket.upload(avatar.path, options, async (err, item) => {
                 try {
                     if (err) {
                         console.log(err)
-                            // return res.status(400).json({ success: false, message: 'ERROR' })
+                        // return res.status(400).json({ success: false, message: 'ERROR' })
                         throw new Error('ERROR')
                     }
                 } catch (err) {
@@ -91,7 +91,7 @@ class UserController {
         }
 
     }
-    isUserATeacherOfClass = async(userId, classId) => {
+    isUserATeacherOfClass = async (userId, classId) => {
         const user = await User.findOne({ _id: userId }, "classTeacher")
         var isOK = false
         user.classTeacher.forEach(element => {
@@ -104,7 +104,7 @@ class UserController {
         });
         return isOK
     }
-    isUserAStudentOfClass = async(userId, classId) => {
+    isUserAStudentOfClass = async (userId, classId) => {
         const user = await User.findOne({ _id: userId }, "classStudent")
         var isOK = false
         user.classStudent.forEach(element => {
@@ -117,7 +117,7 @@ class UserController {
         });
         return isOK
     }
-    isUserAMemberOfClass = async(userId, classId) => {
+    isUserAMemberOfClass = async (userId, classId) => {
         const user = await User.findOne({ _id: userId }, "classStudent classTeacher")
         if (classId in user.classStudent || classId in user.classTeacher) {
             return true
