@@ -36,13 +36,13 @@ class ClassroomController {
             while (await Classroom.findOne({ code: code })) {
                 code = Math.random().toString(36).substring(2, 8);
             }
-            var numberOfStudent = 0 // MB them vo
+            var numberOfMember = 1 // MB them vo
             const newClassroom = new Classroom({
                 name,
                 code,
                 description,
                 teacherId: req.userId,
-                numberOfStudent // MinhBao them vo
+                numberOfMember
             });
             const result = await newClassroom.save();
             res.json({
@@ -148,7 +148,6 @@ class ClassroomController {
             // khác teacherId
 
             let updatedClassroom = await Classroom.findOne({ code: code });
-            // console.log(updatedClassroom)
             if (!updatedClassroom ||
                 updatedClassroom.teacherId == req.userId ||
                 updatedClassroom.listStudent.includes(req.userId)
@@ -159,10 +158,7 @@ class ClassroomController {
                 });
 
             updatedClassroom.listStudent.push(req.userId);
-            // console.log(updatedClassroom)
-            var numberOfStudent = updatedClassroom.numberOfStudent
-                // console.log(numberOfStudent)
-            updatedClassroom.numberOfStudent = numberOfStudent + 1
+            updatedClassroom.numberOfMember = updatedClassroom.numberOfMember + 1
             await updatedClassroom.save();
 
             // TODO: cập nhật danh sách classroom cũa user
@@ -213,7 +209,7 @@ class ClassroomController {
                 });
             updatedClassroom.listStudent.pull({ _id: studentId });
 
-            updatedClassroom.numberOfStudent = updatedClassroom.numberOfStudent - 1
+            updatedClassroom.numberOfMember = updatedClassroom.numberOfMember - 1
             await updatedClassroom.save();
 
             // TODO: cập nhật danh sách classroom cũa user

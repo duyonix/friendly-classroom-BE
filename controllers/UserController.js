@@ -8,12 +8,11 @@ const Homework = require('../models/Homework')
 class UserController {
     getInformation = (req, res) => {
         try {
-            console.log('User')
             const userId = req.userId
             const username = req.username
             User.findOne({ username: username }).populate({
                 path: 'classStudent classTeacher',
-                select: 'name code description teacherId numberOfStudent',
+                select: 'name code description teacherId numberOfMember',
                 populate: {
                     path: 'teacherId',
                     select: 'username'

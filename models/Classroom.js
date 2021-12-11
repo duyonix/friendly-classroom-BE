@@ -35,8 +35,8 @@ const Classroom = new Schema({
         type: ObjectId,
         ref: 'User',
     }, ],
-    numberOfStudent: {
-        type: Number
+    numberOfMember: {
+        type: Number,
     }
 }, {
     timestamps: true,
