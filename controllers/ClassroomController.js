@@ -148,9 +148,10 @@ class ClassroomController {
             // khác teacherId
 
             let updatedClassroom = await Classroom.findOne({ code: code });
+            // console.log(updatedClassroom)
             if (!updatedClassroom ||
                 updatedClassroom.teacherId == req.userId ||
-                classroom.listStudent.includes(req.userId)
+                updatedClassroom.listStudent.includes(req.userId)
             )
                 return res.status(401).json({
                     success: false,
@@ -158,8 +159,9 @@ class ClassroomController {
                 });
 
             updatedClassroom.listStudent.push(req.userId);
-
+            // console.log(updatedClassroom)
             var numberOfStudent = updatedClassroom.numberOfStudent
+                // console.log(numberOfStudent)
             updatedClassroom.numberOfStudent = numberOfStudent + 1
             await updatedClassroom.save();
 
