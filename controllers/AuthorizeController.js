@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const argon2 = require('argon2');
 const mongoose = require('mongoose')
+const firebase = require('../firebase')
 
 const generateToken = (payload) => {
     const { id, username } = payload;
@@ -14,6 +15,18 @@ const generateToken = (payload) => {
     return accessToken
 };
 
+const getSignedUrlNotAvatar = async(fullName) => {
+    const splited = fullName.split(' ')
+    const character = splited[splited.length - 1][0].toUpperCase()
+    const destinationFirebase = `avatar/not avatar/${character}.jpg`
+    const config = {
+        action: 'read',
+        expires: '03-17-2025'
+    };
+    const url = await firebase.bucket.file(destinationFirebase).getSignedUrl(config);
+    return url
+}
+
 class AuthorizeController {
     signup = async(req, res) => {
         const username = req.body.username;
@@ -24,19 +37,19 @@ class AuthorizeController {
         try {
             const user = await User.findOne({ username });
             if (user) {
-                /* return res
-                    .status(400)
-                    .json({ success: false, message: 'Username already taken' }); */
                 throw new Error("Username already taken")
             }
 
             password = await argon2.hash(password);
+            const avatarUrls = await getSignedUrlNotAvatar(fullName)
+            const avatarUrl = avatarUrls[0]
             const newUser = new User({
                 username,
                 password,
                 fullName,
                 email,
-                phoneNumber
+                phoneNumber,
+                avatarUrl
             });
             await newUser.save();
             res.status(200).json({ success: true, message: 'Người dùng đã được tạo' });
