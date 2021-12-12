@@ -21,6 +21,17 @@ class ClassroomController {
         const { name, description } = req.body;
 
         try {
+            // check if user is already teacher of another classroom which has the same name
+
+            let checkDuplicateNameClassroom = await Classroom.findOne({
+                name,
+                teacherId: req.userId,
+            });
+
+            if (checkDuplicateNameClassroom) {
+                throw new Error('Tên lớp học bị trùng');
+            }
+
             let code = Math.random().toString(36).substring(2, 8);
             // check code unique
             while (await Classroom.findOne({ code: code })) {
@@ -48,6 +59,11 @@ class ClassroomController {
                 { $push: { classTeacher: result._id } }
             );
         } catch (error) {
+            if (error.message)
+                res.status(400).json({
+                    success: false,
+                    message: error.message,
+                });
             console.log(error);
             res.status(500).json({
                 success: false,
@@ -62,6 +78,19 @@ class ClassroomController {
         const { name, description } = req.body;
 
         try {
+            if (name) {
+                // check if user is already teacher of another classroom which has the same name
+
+                let checkDuplicateNameClassroom = await Classroom.findOne({
+                    name,
+                    teacherId: req.userId,
+                });
+
+                if (checkDuplicateNameClassroom) {
+                    throw new Error('Tên lớp học bị trùng');
+                }
+            }
+
             const classroomUpdateCondition = {
                 _id: req.params.classroomId,
                 teacherId: req.userId,
