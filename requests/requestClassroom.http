@@ -5,7 +5,7 @@ Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYjYwMzk4ZjA5OTQ1NDY4OGJmMzUzZSIsInVzZXJuYW1lIjoieWRhbSIsImlhdCI6MTYzOTMxODY4NywiZXhwIjoxNjM5MzU0Njg3fQ.iBMp0xSm_y8KjTnp_tcFztxvfb9kx2Iwe4OGnoc7O7k
 
 {
-    "name": "toán 6",
+    "name": "toán ý",
     "description": "lop hoc cua ydam"
 }
 
@@ -14,10 +14,10 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYjYwMzk4Z
 
 PUT http://localhost:5000/api/classroom/join
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYjYwMzk4ZjA5OTQ1NDY4OGJmMzUzZSIsInVzZXJuYW1lIjoieWRhbSIsImlhdCI6MTYzOTMxODY4NywiZXhwIjoxNjM5MzU0Njg3fQ.iBMp0xSm_y8KjTnp_tcFztxvfb9kx2Iwe4OGnoc7O7k
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYjYyNjhjNGMyMzQyNDdhY2RkY2M3YyIsInVzZXJuYW1lIjoiaHZ1IiwiaWF0IjoxNjM5MzI3MzgzLCJleHAiOjE2MzkzNjMzODN9.LVyHW7D4bCdjTKiCDueY0PHU_e75tk7JC1WxcJH5Xh0
 
 {
-    "code": "mr107p"
+    "code": "0cbt1h"
 }
 ###
 
@@ -36,8 +36,8 @@ Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYWUyOGVlN2JjZTdi
 ###
 
 # get people trong lớp
-GET http://localhost:5000/api/61adf0f4cf5efc346cc0f0a0/people
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYWUyOGVlN2JjZTdiNDE5ODAxNWVhYiIsInVzZXJuYW1lIjoieWRhbTEyMzQ1NiIsImlhdCI6MTYzODgwMzkyMywiZXhwIjoxNjM4ODM5OTIzfQ.YK7J3oU8greswz6hBvcWNo9dIRMZiTBhCPN3RMdvrmY
+GET http://localhost:5000/api/61b626df62bac61398469f35/people
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYjYyNjhjNGMyMzQyNDdhY2RkY2M3YyIsInVzZXJuYW1lIjoiaHZ1IiwiaWF0IjoxNjM5MzI3MzgzLCJleHAiOjE2MzkzNjMzODN9.LVyHW7D4bCdjTKiCDueY0PHU_e75tk7JC1WxcJH5Xh0
 ###
 
 # edit info lớp
@@ -61,10 +61,10 @@ POST http://localhost:5000/api/authorize/signup
 Content-Type: application/json
 
 {
-    "username": "ydam",
+    "username": "hvu",
     "password": "123",
-    "email": "ydam@gmail.com",
-    "fullName": "Y Dam",
+    "email": "hvu@gmail.com",
+    "fullName": "Hoangvu",
     "phoneNumber": "0831113332"
 }
 
@@ -74,29 +74,10 @@ POST http://localhost:5000/api/authorize/login
 Content-Type: application/json
 
 {
-    "username": "duy12345",
-    "password": "12345"
+    "username": "hvu",
+    "password": "123"
 }
 
-###
-POST http://localhost:5000/api/authorize/login
-Content-Type: application/json
-
-{
-    "username": "hoangvuu",
-    "password": "hoangvu"
-}
-
-###
-
-
-POST http://localhost:5000/api/authorize/login
-Content-Type: application/json
-
-{
-    "username": "ydam123456",
-    "password": "123456"
-}
 
 ###
 
@@ -109,11 +90,3 @@ Content-Type: application/json
 }
 
 ###
-
-POST http://localhost:5000/api/authorize/login
-Content-Type: application/json
-
-{
-    "username": "hienvi123",
-    "password": "hienvi123"
-}

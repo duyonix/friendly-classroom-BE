@@ -3,10 +3,11 @@ const Classroom = require('../models/Classroom');
 
 const verifyAccessClassroom = async (req, res, next) => {
     try {
-        const classroom = await Classroom.findById(req.params.classroomId)
-            .select('teacherId listStudent')
-            .lean();
+        const classroom = await Classroom.findById(
+            req.params.classroomId
+        ).select('teacherId listStudent');
         if (!classroom) throw new Error('Không tìm thấy lớp học');
+
         if (
             classroom.listStudent.includes(req.userId) ||
             classroom.teacherId == req.userId

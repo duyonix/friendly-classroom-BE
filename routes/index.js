@@ -23,8 +23,13 @@ function route(app) {
     app.put('/api/classroom/join', auth, classroomController.join);
     app.post('/api/classroom/create', auth, classroomController.create);
 
-    app.use('/api/:classroomId/post', auth, postRoute);
-    app.use('/api/:classroomId/:postId/comment', auth, commentRoute);
+    app.use('/api/:classroomId/post', auth, accessClassroom, postRoute);
+    app.use(
+        '/api/:classroomId/:postId/comment',
+        auth,
+        accessClassroom,
+        commentRoute
+    );
     app.use('/api/:classroomId', auth, accessClassroom, classroomRoute);
 }
 
