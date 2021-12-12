@@ -33,7 +33,7 @@ const User = new mongoose.Schema({
         type: ObjectId,
         ref: 'Classroom'
     }],
-    avatar: {
+    avatarUrl: {
         type: String,
     },
     todo: [{

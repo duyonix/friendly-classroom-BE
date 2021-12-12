@@ -12,6 +12,16 @@ saveHomeworkToMongodb = async(classId, title, creatorId, description, deadline, 
     await Classroom.updateOne({ _id: classId }, { $push: { listHomework: result._id } })
 }
 
+getSignedUrlHomework = async(classId, title, filename) => {
+    const destinationFirebase = `homework/${classId}/${title}/${filename}`
+    const config = {
+        action: 'read',
+        expires: '03-17-2025'
+    };
+    const url = await firebase.bucket.file(destinationFirebase).getSignedUrl(config);
+    return url
+}
+
 class HomeworkController {
     createHomework = async(req, res) => {
         try {
@@ -37,7 +47,8 @@ class HomeworkController {
                 destination: `homework/${classId}/${title}/${file.filename}`
             }
             firebase.bucket.upload(file.path, options, async function(err, fileFirebase) {
-                attachedFiles.push(file.filename)
+                const url = await getSignedUrlHomework(classId, title, file.filename)
+                attachedFiles.push(url[0])
                 try {
                     saveHomeworkToMongodb(classId, title, creatorId, description, deadline, attachedFiles)
                     return res.status(200).json({ success: true, message: "Homework is added" })
@@ -90,29 +101,30 @@ class HomeworkController {
             if (!homework) {
                 throw new Error('Not exists')
             }
-            if (homework.attachedFiles.length == 0) {
-                return res.status(200).json({ success: true, homework })
-            }
-            const destinationFirebase = `homework/${homework.classId}/${homework.title}/${homework.attachedFiles[0]}`
-            const config = {
-                action: 'read',
-                expires: '03-17-2025'
-            };
-            firebase.bucket.file(destinationFirebase).getSignedUrl(config, function(err, url) {
-                try {
-                    if (err) {
-                        throw new Error('ERROR')
-                    }
-                } catch (err) {
-                    return res.status(400).json({ success: false, message: 'ERROR' })
+            return res.status(200).json({ success: true, homework })
+                /*if (homework.attachedFiles.length == 0) {
+                    return res.status(200).json({ success: true, homework })
                 }
-                return res.status(200).json({ success: true, homework, downloadURL: url })
+                const destinationFirebase = `homework/${homework.classId}/${homework.title}/${homework.attachedFiles[0]}`
+                const config = {
+                    action: 'read',
+                    expires: '03-17-2025'
+                };
+                firebase.bucket.file(destinationFirebase).getSignedUrl(config, function(err, url) {
+                    try {
+                        if (err) {
+                            throw new Error('ERROR')
+                        }
+                    } catch (err) {
+                        return res.status(400).json({ success: false, message: 'ERROR' })
+                    }
+                    return res.status(200).json({ success: true, homework, downloadURL: url })
 
-                const file = fs.createWriteStream("./uploads/files.pdf");
-                const request = https.get(url, function(response) {
-                    response.pipe(file);
-                });
-            });
+                    const file = fs.createWriteStream("./uploads/files.pdf");
+                    const request = https.get(url, function(response) {
+                        response.pipe(file);
+                    });
+                });*/
 
         } catch (err) {
             if (err.message == 'Not exists') {

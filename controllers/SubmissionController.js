@@ -40,6 +40,9 @@ class SubmissionController {
             const title = req.body.title
             const studentId = req.body.studentId
 
+            console.log(studentId)
+            console.log(userId)
+
             // only teacher and that student can get his submission
             if (userId != studentId) {
                 const isOK = await UserController.isUserATeacherOfClass(userId, classId)
