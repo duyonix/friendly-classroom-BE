@@ -19,7 +19,7 @@ const User = new mongoose.Schema({
     },
     email: {
         type: String,
-        required: true,
+        $regex: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/
     },
     phoneNumber: {
         type: String,

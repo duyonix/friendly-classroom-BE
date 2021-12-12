@@ -15,6 +15,20 @@ const generateToken = (payload) => {
     return accessToken
 };
 
+const checkEmail = (email) => {
+    if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+        return true
+    }
+    return false
+}
+
+const checkPhoneNumber = (phoneNumber) => {
+    if (/(84|0[3|5|7|8|9])+([0-9]{8})\b/.test(phoneNumber)) {
+        return true
+    }
+    return false
+}
+
 const getSignedUrlNotAvatar = async(fullName) => {
     const splited = fullName.split(' ')
     const character = splited[splited.length - 1][0].toUpperCase()
@@ -35,6 +49,9 @@ class AuthorizeController {
         const phoneNumber = req.body.phoneNumber;
         const fullName = req.body.fullName;
         try {
+            if (!checkEmail(email)) throw new Error("not a email")
+            if (!checkPhoneNumber(phoneNumber)) throw new Error("not a phone number")
+
             const user = await User.findOne({ username });
             if (user) {
                 throw new Error("Username already taken")
@@ -58,6 +75,14 @@ class AuthorizeController {
                 res
                     .status(400)
                     .json({ success: false, message: 'Tên tài khoản đã tồn tại' });
+            } else if (err.message == 'not a email') {
+                res
+                    .status(400)
+                    .json({ success: false, message: 'Email sai định dạng mất rồi' });
+            } else if (err.message == 'not a phone number') {
+                res
+                    .status(400)
+                    .json({ success: false, message: 'Số điện thoại sai định dạng mất rồi' });
             } else {
                 console.log(err)
                 res.status(400).json({ success: false, message: 'Lỗi rồi :(' });
