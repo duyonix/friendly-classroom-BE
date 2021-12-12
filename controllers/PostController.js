@@ -6,9 +6,6 @@ const Classroom = require('../models/Classroom');
 const Comment = require('../models/Comment');
 
 class PostController {
-    // @route GET api/posts/all
-    // @desc Get posts
-    // @access Private
     get = async (req, res) => {
         try {
             const classroom = await Classroom.findById(req.params.classroomId)
@@ -37,13 +34,10 @@ class PostController {
             console.log(error);
             res.status(500).json({
                 success: false,
-                message: 'Internal server error',
+                message: 'Lỗi rồi :(',
             });
         }
     };
-    // @route GET api/posts/all
-    // @desc Get posts
-    // @access Private
     detail = async (req, res) => {
         try {
             const post = await Post.findById(req.params.postId)
@@ -56,19 +50,24 @@ class PostController {
                         sort: { createdAt: -1 },
                     },
                 });
+
+            if (!post) {
+                throw new Error('Không tìm thấy post');
+            }
             res.json({ success: true, post: post });
-            // TODO: SORT TIMESTAMP
         } catch (error) {
+            if (error.message)
+                res.status(400).json({
+                    success: false,
+                    message: error.message,
+                });
             console.log(error);
             res.status(500).json({
                 success: false,
-                message: 'Internal server error',
+                message: 'Lỗi rồi :(',
             });
         }
     };
-    // @route POST api/posts
-    // @desc Create post
-    // @access Private
     create = async (req, res) => {
         const { title, body } = req.body;
         if (!title || !body)
@@ -102,13 +101,10 @@ class PostController {
             console.log(error);
             res.status(500).json({
                 success: false,
-                message: 'Internal server error',
+                message: 'Lỗi rồi :(',
             });
         }
     };
-    // @route PUT api/posts
-    // @desc Update post
-    // @access Private
     update = async (req, res) => {
         const { title, body } = req.body;
 
@@ -143,14 +139,11 @@ class PostController {
             console.log(error);
             res.status(500).json({
                 success: false,
-                message: 'Internal server error',
+                message: 'Lỗi rồi :(',
             });
         }
     };
 
-    // @route DELETE api/posts
-    // @desc Delete post
-    // @access Private
     delete = async (req, res) => {
         try {
             const postDeleteCondition = {
@@ -184,7 +177,7 @@ class PostController {
             console.log(error);
             res.status(500).json({
                 success: false,
-                message: 'Internal server error',
+                message: 'Lỗi rồi :(',
             });
         }
     };

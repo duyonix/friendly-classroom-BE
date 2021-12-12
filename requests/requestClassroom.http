@@ -2,7 +2,7 @@
 
 POST http://localhost:5001/api/classroom/create
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYWRlZGFlMDk0NTgzMGQ3NDBkNWJiOSIsInVzZXJuYW1lIjoiaGllbnZpMTIzIiwiaWF0IjoxNjM4ODAyNTg2LCJleHAiOjE2Mzg4Mzg1ODZ9.rFooGfCHHoqL5CIlHucG349cd9U2urEZV88i0WsVuS0
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYjIyMDQ3MjExYzgxNDhkYzQzZDg4YiIsInVzZXJuYW1lIjoieWRhbTEyMzQ1NiIsImlhdCI6MTYzOTA2MzcxNywiZXhwIjoxNjM5MDk5NzE3fQ.QGRLHiOZAnsPdi-nwEQ4hQea4p6ukTXsIXsm5xzYOmQ
 
 {
     "name": "toán 6",
@@ -94,8 +94,8 @@ POST http://localhost:5001/api/authorize/login
 Content-Type: application/json
 
 {
-    "username": "ydam12345",
-    "password": "12345"
+    "username": "ydam123456",
+    "password": "123456"
 }
 
 ###

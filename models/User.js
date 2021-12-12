@@ -27,20 +27,15 @@ const User = new mongoose.Schema({
     },
     classStudent: [{
         type: ObjectId,
-        ref: 'Classroom'
-    }],
+        ref: 'Classroom',
+    }, ],
     classTeacher: [{
         type: ObjectId,
-        ref: 'Classroom'
-    }],
+        ref: 'Classroom',
+    }, ],
     avatarUrl: {
         type: String,
     },
-    todo: [{
-        type: ObjectId,
-        ref: 'Homework'
-    }]
-
 }, {
     timestamps: true,
 });
