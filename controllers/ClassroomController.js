@@ -174,8 +174,12 @@ class ClassroomController {
 
         try {
             let updatedClassroom = await Classroom.findOne({ code: code });
+
+            if (!updatedClassroom) {
+                throw new Error('Không tìm thấy lớp học này');
+            }
+
             if (
-                !updatedClassroom ||
                 updatedClassroom.teacherId == req.userId ||
                 updatedClassroom.listStudent.includes(req.userId)
             ) {
