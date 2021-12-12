@@ -3,15 +3,16 @@ const Schema = mongoose.Schema;
 const { ObjectId } = mongoose.Schema.Types;
 
 const Submission = new Schema({
-    classId: {
+    classroomId: {
         type: ObjectId,
         ref: 'Classroom'
     },
     title: {
         type: String
     },
-    studentName: {
-        type: String
+    studentId: {
+        type: ObjectId,
+        ref: 'User'
     },
     status: {
         type: String,
