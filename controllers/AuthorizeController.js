@@ -32,7 +32,7 @@ const checkPhoneNumber = (phoneNumber) => {
 const getSignedUrlNotAvatar = async(fullName) => {
     const splited = fullName.split(' ')
     const character = splited[splited.length - 1][0].toUpperCase()
-    const destinationFirebase = `avatar/not avatar/${character}.jpg`
+    const destinationFirebase = `avatar/not avatar/${character}.png`
     const config = {
         action: 'read',
         expires: '03-17-2025'
