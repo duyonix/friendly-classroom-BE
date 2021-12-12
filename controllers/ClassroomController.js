@@ -176,7 +176,7 @@ class ClassroomController {
             let updatedClassroom = await Classroom.findOne({ code: code });
 
             if (!updatedClassroom) {
-                throw new Error('Không tìm thấy lớp này');
+                throw new Error('Không tìm thấy lớp học này');
             }
 
             if (
