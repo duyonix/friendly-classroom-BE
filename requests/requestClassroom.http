@@ -2,11 +2,11 @@
 
 POST http://localhost:5000/api/classroom/create
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYjYwMzk4ZjA5OTQ1NDY4OGJmMzUzZSIsInVzZXJuYW1lIjoieWRhbSIsImlhdCI6MTYzOTMxODY4NywiZXhwIjoxNjM5MzU0Njg3fQ.iBMp0xSm_y8KjTnp_tcFztxvfb9kx2Iwe4OGnoc7O7k
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYjYwMzk4ZjA5OTQ1NDY4OGJmMzUzZSIsInVzZXJuYW1lIjoieWRhbSIsImlhdCI6MTYzOTQwMTM2NywiZXhwIjoxNjM5NDM3MzY3fQ.udqhAF685dZuOmZ4ZrzoBGUKAU-BAffFZyVoQiXy8jA
 
 {
-    "name": "toán ý",
-    "description": "lop hoc cua ydam"
+    "name": "test chức năng",
+    "description": "lop hoc cua ý đàm"
 }
 
 # tham gia lớp
