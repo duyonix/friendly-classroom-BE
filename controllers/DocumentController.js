@@ -3,8 +3,8 @@ const Document = require('../models/Document')
 const Classroom = require('../models/Classroom')
 const mongoose = require('mongoose')
 
-const saveDocumentToMongoDB = async(classId, title, description, creatorId, attachedFiles, duplicateTopicId) => {
-    const newDocument = new Document({ classId, title, description, creatorId, attachedFiles })
+const saveDocumentToMongoDB = async(classId, title, description, creatorId, attachedFiles, topic, duplicateTopicId) => {
+    const newDocument = new Document({ classId, title, description, creatorId, attachedFiles, topic })
     const result = await newDocument.save()
     await Classroom.updateOne({ "topicDocument._id": duplicateTopicId }, { $push: { 'topicDocument.$.documents': result._id } })
 }
@@ -75,7 +75,7 @@ class DocumentController {
             }
             const file = req.file
             if (!file) {
-                await saveDocumentToMongoDB(classId, title, description, creatorId, attachedFiles, duplicateTopicId)
+                await saveDocumentToMongoDB(classId, title, description, creatorId, attachedFiles, topic, duplicateTopicId)
                 return res.status(200).json({ success: true, message: 'Uploaded' })
             }
             var options = {
@@ -84,7 +84,7 @@ class DocumentController {
             firebase.bucket.upload(file.path, options, async(err, item) => {
                 try {
                     attachedFiles.push(file.filename)
-                    await saveDocumentToMongoDB(classId, title, description, creatorId, attachedFiles, duplicateTopicId)
+                    await saveDocumentToMongoDB(classId, title, description, creatorId, attachedFiles, topic, duplicateTopicId)
                     return res.status(200).json({ success: true, message: 'Uploaded' })
                 } catch (err) {
                     console.log(err);
@@ -153,7 +153,7 @@ class DocumentController {
         const topicDocument = await Classroom.findOne({ _id: classId }, "topicDocument")
             .populate({
                 path: "topicDocument.documents",
-                select: "title attachedFiles"
+                select: "title createdAt"
             })
         const topics = topicDocument.topicDocument
         reverseTopic(topics)

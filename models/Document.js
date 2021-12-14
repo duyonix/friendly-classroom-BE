@@ -21,6 +21,11 @@ const Document = new mongoose.Schema({
     attachedFiles: [{
         type: String,
     }, ],
+    topic: {
+        type: String
+    }
+}, {
+    timestamps: true
 });
 
 module.exports = mongoose.model('Document', Document);

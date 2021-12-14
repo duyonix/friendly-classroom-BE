@@ -6,9 +6,11 @@ const { ObjectId } = mongoose.Schema.Types
 
 const Classroom = require('../models/Classroom')
 
-saveHomeworkToMongodb = async(classId, title, creatorId, description, deadline, attachedFiles, duplicateTopicId) => {
-    const newHomework = new Homework({ classId, title, creatorId, description, deadline, attachedFiles })
+saveHomeworkToMongodb = async(classId, title, creatorId, description, deadline, attachedFiles, topic, duplicateTopicId) => {
+    const newHomework = new Homework({ classId, title, creatorId, description, deadline, attachedFiles, topic })
     const result = await newHomework.save()
+    console.log("OK")
+    console.log(duplicateTopicId)
     await Classroom.updateOne({ "topicHomework._id": duplicateTopicId }, { $push: { 'topicHomework.$.homeworks': result._id } })
 }
 
@@ -85,10 +87,10 @@ class HomeworkController {
                 throw new Error('Rights')
             }
             var { duplicateTopicId, topics } = await checkIfDuplicate(classId, topic)
-            console.log(topics)
             if (!duplicateTopicId) {
                 duplicateTopicId = await addNewTopic(classId, topic)
             }
+            console.log(duplicateTopicId)
             for (let i = 0; i < topics.length; i++) {
                 for (let j = 0; j < topics[i].homeworks.length; j++) {
                     if (topics[i].homeworks[j].title === title) {
@@ -97,7 +99,7 @@ class HomeworkController {
                 }
             }
             if (!file) {
-                saveHomeworkToMongodb(classId, title, creatorId, description, deadline, attachedFiles, duplicateTopicId)
+                await saveHomeworkToMongodb(classId, title, creatorId, description, deadline, attachedFiles, topic, duplicateTopicId)
                 return res.status(200).json({ success: true, message: "Homework is added" })
             }
             const options = {
@@ -106,8 +108,9 @@ class HomeworkController {
             firebase.bucket.upload(file.path, options, async function(err, fileFirebase) {
                 const url = await getSignedUrlHomework(classId, title, file.filename)
                 attachedFiles.push(url[0])
+                console.log(duplicateTopicId)
                 try {
-                    saveHomeworkToMongodb(classId, title, creatorId, description, deadline, attachedFiles, duplicateTopicId)
+                    await saveHomeworkToMongodb(classId, title, creatorId, description, deadline, attachedFiles, topic, duplicateTopicId)
                     return res.status(200).json({ success: true, message: "Homework is added" })
                 } catch (err) {
                     console.log(err)
@@ -143,11 +146,13 @@ class HomeworkController {
     }
     getAllHomeworkMetadataOfClass = async(req, res) => {
         const classId = req.body.classId
+        console.log(classId)
         const topicHomework = await Classroom.findOne({ _id: classId }, "topicHomework")
             .populate({
                 path: "topicHomework.homeworks",
-                select: "title attachedFiles deadline"
+                select: "title deadline"
             })
+        console.log(topicHomework)
         const topics = topicHomework.topicHomework
         reverseTopic(topics)
         return res.status(200).json(topics)
