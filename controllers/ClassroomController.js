@@ -4,9 +4,10 @@ const User = require('../models/User');
 const Classroom = require('../models/Classroom');
 
 class ClassroomController {
-    get = async (req, res) => {
+    get = async(req, res) => {
         try {
-            const classroom = await Classroom.findById(req.params.classroomId);
+            const classroom = await Classroom.findById(req.params.classroomId,
+                "name code description listPost teacherId listStudent numberOfMember topicDocument.topic topicHomework.topic")
             res.json({ success: true, classroom });
         } catch (error) {
             console.log(error);
@@ -17,9 +18,8 @@ class ClassroomController {
         }
     };
 
-    create = async (req, res) => {
+    create = async(req, res) => {
         const { name, description } = req.body;
-
         try {
             let code = Math.random().toString(36).substring(2, 8);
             // check code unique
@@ -28,12 +28,16 @@ class ClassroomController {
             }
 
             var numberOfMember = 1;
+            const topicDocument = []
+            const topicHomework = []
             const newClassroom = new Classroom({
                 name,
                 code,
                 description,
                 teacherId: req.userId,
                 numberOfMember,
+                topicDocument,
+                topicHomework
             });
             const result = await newClassroom.save();
             res.json({
@@ -43,10 +47,7 @@ class ClassroomController {
             });
 
             // Add classroom id to classTeacher
-            await User.findOneAndUpdate(
-                { _id: req.userId },
-                { $push: { classTeacher: result._id } }
-            );
+            await User.findOneAndUpdate({ _id: req.userId }, { $push: { classTeacher: result._id } });
         } catch (error) {
             console.log(error);
             res.status(500).json({
@@ -58,7 +59,7 @@ class ClassroomController {
     // @route PUT api/posts
     // @desc Update post
     // @access Private
-    update = async (req, res) => {
+    update = async(req, res) => {
         const { name, description } = req.body;
 
         try {
@@ -68,12 +69,10 @@ class ClassroomController {
             };
 
             let updatedClassroom = await Classroom.findOneAndUpdate(
-                classroomUpdateCondition,
-                {
+                classroomUpdateCondition, {
                     name,
                     description,
-                },
-                { new: true }
+                }, { new: true }
             );
 
             // User not authorized to update classroom or classroom not found
@@ -103,7 +102,7 @@ class ClassroomController {
         }
     };
 
-    delete = async (req, res) => {
+    delete = async(req, res) => {
         try {
             const classroomDeleteCondition = {
                 _id: req.params.classroomId,
@@ -140,13 +139,12 @@ class ClassroomController {
         }
     };
 
-    join = async (req, res) => {
+    join = async(req, res) => {
         const { code } = req.body;
 
         try {
             let updatedClassroom = await Classroom.findOne({ code: code });
-            if (
-                !updatedClassroom ||
+            if (!updatedClassroom ||
                 updatedClassroom.teacherId == req.userId ||
                 updatedClassroom.listStudent.includes(req.userId)
             ) {
@@ -180,7 +178,7 @@ class ClassroomController {
             });
         }
     };
-    removeStudent = async (req, res) => {
+    removeStudent = async(req, res) => {
         const { studentId } = req.body;
 
         try {
@@ -224,7 +222,7 @@ class ClassroomController {
             });
         }
     };
-    people = async (req, res) => {
+    people = async(req, res) => {
         try {
             const classroom = await Classroom.findById(req.params.classroomId)
                 .select('teacherId listStudent')

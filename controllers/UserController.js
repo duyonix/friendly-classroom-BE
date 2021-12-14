@@ -86,7 +86,7 @@ class UserController {
                     return
                 }
             });*/
-        console.log(user)
+            // console.log(user)
         if (user.length > 0) return true
         else return false
     }

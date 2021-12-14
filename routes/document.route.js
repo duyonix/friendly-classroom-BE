@@ -21,5 +21,6 @@ const auth = require('../middleware/auth');
 
 router.post('/upload', auth, upload.single('file'), documentController.upload)
 router.post('/download', auth, upload.single('file'), documentController.download)
+router.post('/getAllDocumentMetadataOfClass', auth, documentController.getAllDocumentMetadataOfClass)
 
 module.exports = router;

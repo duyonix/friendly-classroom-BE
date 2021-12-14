@@ -1,13 +1,56 @@
 const firebase = require('../firebase')
 const Document = require('../models/Document')
 const Classroom = require('../models/Classroom')
-const https = require('https');
-const fs = require('fs');
+const mongoose = require('mongoose')
 
-const saveDocumentToMongoDB = async(classId, title, description, creatorId, attachedFiles) => {
+const saveDocumentToMongoDB = async(classId, title, description, creatorId, attachedFiles, duplicateTopicId) => {
     const newDocument = new Document({ classId, title, description, creatorId, attachedFiles })
     const result = await newDocument.save()
-    await Classroom.updateOne({ _id: classId }, { $push: { listDocument: result._id } })
+    await Classroom.updateOne({ "topicDocument._id": duplicateTopicId }, { $push: { 'topicDocument.$.documents': result._id } })
+}
+
+const addNewTopic = async(classId, topic) => {
+    var myId = mongoose.Types.ObjectId();
+    await Classroom.updateOne({ _id: classId }, { $push: { topicDocument: { _id: myId, topic: topic, documents: [] } } })
+    return myId
+}
+
+const checkIfDuplicate = async(classId, topic) => {
+    const updatedClassroom = await Classroom.findOne({ _id: classId }, "topicDocument")
+        .populate({
+            path: "topicDocument.documents",
+            select: "title"
+        })
+    const topics = updatedClassroom.topicDocument
+    var duplicateTopicId = null
+    for (let i = 0; i < topics.length; i++) {
+        if (topics[i].topic === topic) {
+            duplicateTopicId = topics[i]._id
+            break
+        }
+    }
+    return { duplicateTopicId, topics }
+}
+
+const reverseDocumentIn1Topic = (topic) => {
+    const n = topic.documents.length
+    for (let i = 0; i <= (n - 1) / 2; i++) {
+        const temp = topic.documents[i]
+        topic.documents[i] = topic.documents[n - 1 - i]
+        topic.documents[n - 1 - i] = temp
+    }
+}
+
+const reverseTopic = (topics) => {
+    const n = topics.length
+    console.log(n)
+    for (let i = 0; i <= (n - 1) / 2; i++) {
+        const temp = topics[i]
+        topics[i] = topics[n - 1 - i]
+        topics[n - 1 - i] = temp
+        reverseDocumentIn1Topic(topics[i])
+        reverseDocumentIn1Topic(topics[n - 1 - i])
+    }
 }
 
 class DocumentController {
@@ -17,22 +60,22 @@ class DocumentController {
             const title = req.body.title
             const description = req.body.description
             const creatorId = req.userId
+            const topic = req.body.topic
+            var { duplicateTopicId, topics } = await checkIfDuplicate(classId, topic)
+            if (!duplicateTopicId) {
+                duplicateTopicId = await addNewTopic(classId, topic)
+            }
             const attachedFiles = []
-            const classroomDocument = await Classroom
-                .findOne({ _id: classId }, "listDocument")
-                .populate({
-                    path: "listDocument",
-                    match: {
-                        title: title
-                    },
-                    select: "title"
-                })
-            if (classroomDocument.listDocument.length > 0) {
-                throw new Error("2 documents have same name in 1 class")
+            for (let i = 0; i < topics.length; i++) {
+                for (let j = 0; j < topics[i].documents.length; j++) {
+                    if (topics[i].documents[j].title === title) {
+                        throw new Error("2 documents have same name in 1 class")
+                    }
+                }
             }
             const file = req.file
             if (!file) {
-                await saveDocumentToMongoDB(classId, title, description, creatorId, attachedFiles)
+                await saveDocumentToMongoDB(classId, title, description, creatorId, attachedFiles, duplicateTopicId)
                 return res.status(200).json({ success: true, message: 'Uploaded' })
             }
             var options = {
@@ -41,7 +84,7 @@ class DocumentController {
             firebase.bucket.upload(file.path, options, async(err, item) => {
                 try {
                     attachedFiles.push(file.filename)
-                    await saveDocumentToMongoDB(classId, title, description, creatorId, attachedFiles)
+                    await saveDocumentToMongoDB(classId, title, description, creatorId, attachedFiles, duplicateTopicId)
                     return res.status(200).json({ success: true, message: 'Uploaded' })
                 } catch (err) {
                     console.log(err);
@@ -63,7 +106,6 @@ class DocumentController {
         try {
             const classId = req.body.classId
             const title = req.body.title
-
             Document.findOne({ classId: classId, title: title }, function(err, document) {
                 try {
                     if (err) {
@@ -89,11 +131,6 @@ class DocumentController {
                             return res.status(400).json({ success: false, message: 'ERROR' })
                         }
                         return res.status(200).json({ success: true, document, downloadURL: url })
-
-                        const file = fs.createWriteStream("./uploads/files.pdf");
-                        const request = https.get(url, function(response) {
-                            response.pipe(file);
-                        });
                     });
                 } catch (err) {
                     if (err.message == 'Document doesnt exist')
@@ -111,14 +148,17 @@ class DocumentController {
         }
     }
 
+    getAllDocumentMetadataOfClass = async(req, res) => {
+        const classId = req.body.classId
+        const topicDocument = await Classroom.findOne({ _id: classId }, "topicDocument")
+            .populate({
+                path: "topicDocument.documents",
+                select: "title attachedFiles"
+            })
+        const topics = topicDocument.topicDocument
+        reverseTopic(topics)
+        return res.status(200).json(topics)
+    }
 }
 
 module.exports = new DocumentController()
-
-// Structure firebase:
-
-// storage
-//     + document
-//           . classId
-//                - DocumentTitle
-//                       File

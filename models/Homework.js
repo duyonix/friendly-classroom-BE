@@ -22,7 +22,10 @@ const Homework = new mongoose.Schema({
     },
     attachedFiles: [{
         type: String
-    }]
+    }],
+    topic: {
+        type: String
+    },
 }, {
     timestamps: true
 })

@@ -6,10 +6,10 @@ const { ObjectId } = mongoose.Schema.Types
 
 const Classroom = require('../models/Classroom')
 
-saveHomeworkToMongodb = async(classId, title, creatorId, description, deadline, attachedFiles) => {
+saveHomeworkToMongodb = async(classId, title, creatorId, description, deadline, attachedFiles, duplicateTopicId) => {
     const newHomework = new Homework({ classId, title, creatorId, description, deadline, attachedFiles })
     const result = await newHomework.save()
-    await Classroom.updateOne({ _id: classId }, { $push: { listHomework: result._id } })
+    await Classroom.updateOne({ "topicHomework._id": duplicateTopicId }, { $push: { 'topicHomework.$.homeworks': result._id } })
 }
 
 getSignedUrlHomework = async(classId, title, filename) => {
@@ -22,6 +22,51 @@ getSignedUrlHomework = async(classId, title, filename) => {
     return url
 }
 
+const reverseHomeworkIn1Topic = (topic) => {
+    const n = topic.homeworks.length
+    for (let i = 0; i <= (n - 1) / 2; i++) {
+        const temp = topic.homeworks[i]
+        topic.homeworks[i] = topic.homeworks[n - 1 - i]
+        topic.homeworks[n - 1 - i] = temp
+    }
+}
+
+const reverseTopic = (topics) => {
+    const n = topics.length
+    for (let i = 0; i <= (n - 1) / 2; i++) {
+        const temp = topics[i]
+        topics[i] = topics[n - 1 - i]
+        topics[n - 1 - i] = temp
+        reverseHomeworkIn1Topic(topics[i])
+        reverseHomeworkIn1Topic(topics[n - 1 - i])
+    }
+}
+
+const addNewTopic = async(classId, topic) => {
+    var myId = mongoose.Types.ObjectId();
+    await Classroom.updateOne({ _id: classId }, { $push: { topicHomework: { _id: myId, topic: topic, homeworks: [] } } })
+    return myId
+}
+
+const checkIfDuplicate = async(classId, topic) => {
+    const updatedClassroom = await Classroom.findOne({ _id: classId }, "topicHomework")
+        .populate({
+            path: "topicHomework.homeworks",
+            select: "title"
+        })
+    const topics = updatedClassroom.topicHomework
+    console.log(topics)
+    var duplicateTopicId = null
+    for (let i = 0; i < topics.length; i++) {
+
+        if (topics[i].topic === topic) {
+            duplicateTopicId = topics[i]._id
+            break
+        }
+    }
+    return { duplicateTopicId, topics }
+}
+
 class HomeworkController {
     createHomework = async(req, res) => {
         try {
@@ -31,16 +76,28 @@ class HomeworkController {
             const title = req.body.title
             const description = req.body.description
             const deadline = req.body.deadline // yyyy/mm/dd hh:mm:ss
+            const topic = req.body.topic
             const attachedFiles = []
-
-            // Only teacher of class can create homework
+                // Only teacher of class can create homework
+                // Consider to erase this
             const isValid = await userController.isUserATeacherOfClass(creatorId, classId)
             if (!isValid) {
                 throw new Error('Rights')
             }
-
+            var { duplicateTopicId, topics } = await checkIfDuplicate(classId, topic)
+            console.log(topics)
+            if (!duplicateTopicId) {
+                duplicateTopicId = await addNewTopic(classId, topic)
+            }
+            for (let i = 0; i < topics.length; i++) {
+                for (let j = 0; j < topics[i].homeworks.length; j++) {
+                    if (topics[i].homeworks[j].title === title) {
+                        throw new Error("2 homeworks have same name in 1 class")
+                    }
+                }
+            }
             if (!file) {
-                saveHomeworkToMongodb(classId, title, creatorId, description, deadline, attachedFiles)
+                saveHomeworkToMongodb(classId, title, creatorId, description, deadline, attachedFiles, duplicateTopicId)
                 return res.status(200).json({ success: true, message: "Homework is added" })
             }
             const options = {
@@ -50,7 +107,7 @@ class HomeworkController {
                 const url = await getSignedUrlHomework(classId, title, file.filename)
                 attachedFiles.push(url[0])
                 try {
-                    saveHomeworkToMongodb(classId, title, creatorId, description, deadline, attachedFiles)
+                    saveHomeworkToMongodb(classId, title, creatorId, description, deadline, attachedFiles, duplicateTopicId)
                     return res.status(200).json({ success: true, message: "Homework is added" })
                 } catch (err) {
                     console.log(err)
@@ -60,6 +117,8 @@ class HomeworkController {
         } catch (err) {
             if (err.message == 'Rights') {
                 return res.status(400).json({ success: false, message: 'Only teacher can create homework' })
+            } else if (err.message === "2 homeworks have same name in 1 class") {
+                return res.status(400).json({ success: false, message: 'Không thể có 2 bài tập về nhà cùng tên được' })
             } else {
                 console.log(err)
                 return res.status(400).json({ success: false, message: 'ERROR' })
@@ -83,16 +142,17 @@ class HomeworkController {
         }
     }
     getAllHomeworkMetadataOfClass = async(req, res) => {
-        try {
-            const classId = req.body.classId
-            const homeworks = await Homework.find({ classId: classId }, "title deadline")
-            return res.status(200).json(homeworks)
-        } catch (err) {
-            console.log(err)
-            return res.status(400).json({ success: false, message: 'ERROR' })
-        }
-
+        const classId = req.body.classId
+        const topicHomework = await Classroom.findOne({ _id: classId }, "topicHomework")
+            .populate({
+                path: "topicHomework.homeworks",
+                select: "title attachedFiles deadline"
+            })
+        const topics = topicHomework.topicHomework
+        reverseTopic(topics)
+        return res.status(200).json(topics)
     }
+
     getHomeworkDetail = async(req, res) => {
         try {
             const classId = req.body.classId
@@ -102,29 +162,6 @@ class HomeworkController {
                 throw new Error('Not exists')
             }
             return res.status(200).json({ success: true, homework })
-                /*if (homework.attachedFiles.length == 0) {
-                    return res.status(200).json({ success: true, homework })
-                }
-                const destinationFirebase = `homework/${homework.classId}/${homework.title}/${homework.attachedFiles[0]}`
-                const config = {
-                    action: 'read',
-                    expires: '03-17-2025'
-                };
-                firebase.bucket.file(destinationFirebase).getSignedUrl(config, function(err, url) {
-                    try {
-                        if (err) {
-                            throw new Error('ERROR')
-                        }
-                    } catch (err) {
-                        return res.status(400).json({ success: false, message: 'ERROR' })
-                    }
-                    return res.status(200).json({ success: true, homework, downloadURL: url })
-
-                    const file = fs.createWriteStream("./uploads/files.pdf");
-                    const request = https.get(url, function(response) {
-                        response.pipe(file);
-                    });
-                });*/
 
         } catch (err) {
             if (err.message == 'Not exists') {
