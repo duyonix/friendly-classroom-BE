@@ -1,28 +1,28 @@
 # tạo lớp
 
-POST http://localhost:5001/api/classroom/create
+POST http://localhost:5000/api/classroom/create
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYjIyMDQ3MjExYzgxNDhkYzQzZDg4YiIsInVzZXJuYW1lIjoieWRhbTEyMzQ1NiIsImlhdCI6MTYzOTA2MzcxNywiZXhwIjoxNjM5MDk5NzE3fQ.QGRLHiOZAnsPdi-nwEQ4hQea4p6ukTXsIXsm5xzYOmQ
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYjYwMzk4ZjA5OTQ1NDY4OGJmMzUzZSIsInVzZXJuYW1lIjoieWRhbSIsImlhdCI6MTYzOTQwMTM2NywiZXhwIjoxNjM5NDM3MzY3fQ.udqhAF685dZuOmZ4ZrzoBGUKAU-BAffFZyVoQiXy8jA
 
 {
-    "name": "toán 6",
-    "description": "lop hoc cua ydam"
+    "name": "test chức năng",
+    "description": "lop hoc cua ý đàm"
 }
 
 # tham gia lớp
 ###
 
-PUT http://localhost:5001/api/classroom/join
+PUT http://localhost:5000/api/classroom/join
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYWRlZDAxYjNmZTdkMGNlNDZjYTk1ZCIsInVzZXJuYW1lIjoiZHV5MTIzNDUiLCJpYXQiOjE2Mzg3OTQ3MDIsImV4cCI6MTYzODgzMDcwMn0.-ZqaI_OQvPHRm20MnsKDuP4jtL2R2k7zAyOrloMooXI
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYjYyNjhjNGMyMzQyNDdhY2RkY2M3YyIsInVzZXJuYW1lIjoiaHZ1IiwiaWF0IjoxNjM5MzI3MzgzLCJleHAiOjE2MzkzNjMzODN9.LVyHW7D4bCdjTKiCDueY0PHU_e75tk7JC1WxcJH5Xh0
 
 {
-    "code": "mr107p"
+    "code": "0cbt1h"
 }
 ###
 
 # remove student khỏi lớp
-PUT http://localhost:5001/api/61adf0f4cf5efc346cc0f0a0/removeStudent
+PUT http://localhost:5000/api/61adf0f4cf5efc346cc0f0a0/removeStudent
 Content-Type: application/json
 Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYWRlZGFlMDk0NTgzMGQ3NDBkNWJiOSIsInVzZXJuYW1lIjoiaGllbnZpMTIzIiwiaWF0IjoxNjM4Nzk0MzI2LCJleHAiOjE2Mzg4MzAzMjZ9.qlrOSj1q2r5SRnBgF9LZmQs3hzq0_Rls9Sn12TwbzO8
 
@@ -31,17 +31,17 @@ Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYWRlZGFlMDk0NTgz
 }
 ###
 # get info lớp
-GET http://localhost:5001/api/61adf0f4cf5efc346cc0f0a0
+GET http://localhost:5000/api/61adf0f4cf5efc346cc0f0a0
 Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYWUyOGVlN2JjZTdiNDE5ODAxNWVhYiIsInVzZXJuYW1lIjoieWRhbTEyMzQ1NiIsImlhdCI6MTYzODgwMzkyMywiZXhwIjoxNjM4ODM5OTIzfQ.YK7J3oU8greswz6hBvcWNo9dIRMZiTBhCPN3RMdvrmY
 ###
 
 # get people trong lớp
-GET http://localhost:5001/api/61adf0f4cf5efc346cc0f0a0/people
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYWUyOGVlN2JjZTdiNDE5ODAxNWVhYiIsInVzZXJuYW1lIjoieWRhbTEyMzQ1NiIsImlhdCI6MTYzODgwMzkyMywiZXhwIjoxNjM4ODM5OTIzfQ.YK7J3oU8greswz6hBvcWNo9dIRMZiTBhCPN3RMdvrmY
+GET http://localhost:5000/api/61b626df62bac61398469f35/people
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYjYyNjhjNGMyMzQyNDdhY2RkY2M3YyIsInVzZXJuYW1lIjoiaHZ1IiwiaWF0IjoxNjM5MzI3MzgzLCJleHAiOjE2MzkzNjMzODN9.LVyHW7D4bCdjTKiCDueY0PHU_e75tk7JC1WxcJH5Xh0
 ###
 
 # edit info lớp
-PUT http://localhost:5001/api/61ab5d0864202bccfcbed4de
+PUT http://localhost:5000/api/61ab5d0864202bccfcbed4de
 Content-Type: application/json
 Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYWUyOGVlN2JjZTdiNDE5ODAxNWVhYiIsInVzZXJuYW1lIjoieWRhbTEyMzQ1NiIsImlhdCI6MTYzODgwMzcxMywiZXhwIjoxNjM4ODM5NzEzfQ.6AUTj0eqDnZMzVxM9Q47IPJxY9qJR51Nx4HfrNtMHTg
 
@@ -50,70 +50,43 @@ Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYWUyOGVlN2JjZTdi
 }
 ###
 # xóa lớp
-DELETE http://localhost:5001/api/61aa4541f34150f813a7dd5c
+DELETE http://localhost:5000/api/61aa4541f34150f813a7dd5c
 Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxYTc5NWYxMjA2ZTgyZDdkNWUxMDA3YSIsInVzZXJuYW1lIjoiZGFtdGhpeHVhbnkiLCJpYXQiOjE2Mzg1NDczMzgsImV4cCI6MTYzODU1MDkzOH0.3KyFGdM1rXSjdO7ElazmsyNqe59U-Wv_uY-B5Ab9xSM
 
 
 ###
 
 ###
-POST http://localhost:5001/api/authorize/signup
+POST http://localhost:5000/api/authorize/signup
 Content-Type: application/json
 
 {
-    "username": "ydam123456",
-    "password": "123456",
-    "gmail": "ydam12345@gmail.com",
-    "fullname": "Y Dam",
+    "username": "hvu",
+    "password": "123",
+    "email": "hvu@gmail.com",
+    "fullName": "Hoangvu",
     "phoneNumber": "0831113332"
 }
 
 
 ###
-POST http://localhost:5001/api/authorize/login
+POST http://localhost:5000/api/authorize/login
 Content-Type: application/json
 
 {
-    "username": "duy12345",
-    "password": "12345"
+    "username": "hvu",
+    "password": "123"
 }
 
-###
-POST http://localhost:5001/api/authorize/login
-Content-Type: application/json
-
-{
-    "username": "hoangvuu",
-    "password": "hoangvu"
-}
 
 ###
 
-
-POST http://localhost:5001/api/authorize/login
+POST http://localhost:5000/api/authorize/login
 Content-Type: application/json
 
 {
-    "username": "ydam123456",
-    "password": "123456"
+    "username": "ydam",
+    "password": "123"
 }
 
 ###
-
-POST http://localhost:5001/api/authorize/login
-Content-Type: application/json
-
-{
-    "username": "ydam123456",
-    "password": "123456"
-}
-
-###
-
-POST http://localhost:5001/api/authorize/login
-Content-Type: application/json
-
-{
-    "username": "hienvi123",
-    "password": "hienvi123"
-}

@@ -1,33 +1,32 @@
 const mongoose = require('mongoose');
 const Classroom = require('../models/Classroom');
 
-const verifyAccessClassroom = async(req, res, next) => {
+const verifyAccessClassroom = async (req, res, next) => {
     try {
-        console.log("INN")
-        const classroom = await Classroom.findById(req.params.classroomId)
-            .select('teacherId listStudent')
-            .lean();
-        if (!classroom)
-            return res.status(401).json({
-                success: false,
-                message: 'Classroom not found',
-            });
+        const classroom = await Classroom.findById(
+            req.params.classroomId
+        ).select('teacherId listStudent');
+        if (!classroom) throw new Error('Không tìm thấy lớp học');
+
         if (
             classroom.listStudent.includes(req.userId) ||
             classroom.teacherId == req.userId
         )
             next();
         else {
-            return res.status(403).json({
-                success: false,
-                message: 'can not access this classroom',
-            });
+            throw new Error('Bạn không được phép truy cập lớp học này');
         }
     } catch (error) {
+        if (error.message)
+            res.status(400).json({
+                success: false,
+                message: error.message,
+            });
+
         console.log(error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error',
+            message: 'Lỗi rồi :(',
         });
     }
 };

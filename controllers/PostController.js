@@ -70,10 +70,6 @@ class PostController {
     };
     create = async (req, res) => {
         const { title, body } = req.body;
-        if (!title || !body)
-            return res
-                .status(400)
-                .json({ success: false, message: 'Please add all the fields' });
 
         try {
             const newPost = new Post({
@@ -93,7 +89,7 @@ class PostController {
             );
             res.json({
                 success: true,
-                message: 'Create new post successfully',
+                message: 'Tạo post mới thành công',
                 post: newPost,
                 classroom: updatedClassroom,
             });
@@ -123,19 +119,23 @@ class PostController {
                 { new: true }
             );
 
-            // User not authorized to update post or post not found
-            if (!updatedPost)
-                return res.status(401).json({
-                    success: false,
-                    message: 'Post not found or user not authorized',
-                });
+            if (!updatedPost) {
+                throw new Error(
+                    'Không tìm thấy post hoặc bạn không có quyền chỉnh sửa thông tin post này'
+                );
+            }
 
             res.json({
                 success: true,
-                message: 'Update post successfully',
+                message: 'Cập nhật post thành công',
                 post: updatedPost,
             });
         } catch (error) {
+            if (error.message)
+                res.status(400).json({
+                    success: false,
+                    message: error.message,
+                });
             console.log(error);
             res.status(500).json({
                 success: false,
@@ -162,18 +162,24 @@ class PostController {
 
             const deletePost = await Post.findOneAndDelete(postDeleteCondition);
 
-            if (!deletePost)
-                return res.status(401).json({
-                    success: false,
-                    message: 'Post not found or user not authorized',
-                });
+            if (!deletePost) {
+                throw new Error(
+                    'Không tìm thấy post hoặc bạn không có quyền xóa post này'
+                );
+            }
 
             res.json({
                 success: true,
                 post: deletePost,
+                message: 'Xóa post thành công',
                 classroom: updatedClassroom,
             });
         } catch (error) {
+            if (error.message)
+                res.status(400).json({
+                    success: false,
+                    message: error.message,
+                });
             console.log(error);
             res.status(500).json({
                 success: false,
