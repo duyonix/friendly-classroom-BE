@@ -3,6 +3,21 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 const Comment = require('../models/Comment');
 const Classroom = require('../models/Classroom');
+const Submission = require('../models/Submission')
+
+const createDefaultSubmissionForEveryHomeworkInClass = async(code, studentId) => {
+    const result = await Classroom.findOne({ code: code }, "topicHomework")
+    const status = 'TO DO'
+    const attachedFiles = []
+    for (let i = 0; i < result.topicHomework.length; i++) {
+        const topic = result.topicHomework[i]
+        for (let j = 0; j < topic.homeworks.length; j++) {
+            const homeworkId = topic.homeworks[j]
+            const newSubmission = new Submission({ homeworkId, studentId, status, attachedFiles })
+            newSubmission.save()
+        }
+    }
+}
 
 class ClassroomController {
     get = async(req, res) => {
@@ -197,7 +212,6 @@ class ClassroomController {
 
     join = async(req, res) => {
         const { code } = req.body;
-
         try {
             let updatedClassroom = await Classroom.findOne({ code: code });
 
@@ -220,6 +234,8 @@ class ClassroomController {
             let updatedMember = await User.findOne({ _id: req.userId });
             updatedMember.classStudent.push(updatedClassroom._id);
             await updatedMember.save();
+
+            await createDefaultSubmissionForEveryHomeworkInClass(code, req.userId)
 
             res.json({
                 success: true,

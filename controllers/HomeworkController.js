@@ -5,13 +5,23 @@ const mongoose = require('mongoose')
 const { ObjectId } = mongoose.Schema.Types
 
 const Classroom = require('../models/Classroom')
+const Submission = require('../models/Submission')
 
 saveHomeworkToMongodb = async(classId, title, creatorId, description, deadline, attachedFiles, topic, duplicateTopicId) => {
     const newHomework = new Homework({ classId, title, creatorId, description, deadline, attachedFiles, topic })
     const result = await newHomework.save()
-    console.log("OK")
-    console.log(duplicateTopicId)
+    createFakeSubmissionForEveryMemberInClass(classId, result._id)
     await Classroom.updateOne({ "topicHomework._id": duplicateTopicId }, { $push: { 'topicHomework.$.homeworks': result._id } })
+}
+
+createFakeSubmissionForEveryMemberInClass = async(classId, homeworkId) => {
+    const classMember = await Classroom.findOne({ _id: classId }, "listStudent")
+    const status = "TO DO"
+    const attachedFiles = []
+    classMember.listStudent.forEach(studentId => {
+        const newSubmission = new Submission({ homeworkId, studentId, status, attachedFiles })
+        newSubmission.save()
+    });
 }
 
 getSignedUrlHomework = async(classId, title, filename) => {
@@ -24,23 +34,29 @@ getSignedUrlHomework = async(classId, title, filename) => {
     return url
 }
 
+const max = (a, b) => {
+    return a > b ? a : b
+}
+
 const reverseHomeworkIn1Topic = (topic) => {
     const n = topic.homeworks.length
-    for (let i = 0; i <= (n - 1) / 2; i++) {
+    for (let i = 0; i <= max(n / 2 - 1, 0); i++) {
         const temp = topic.homeworks[i]
         topic.homeworks[i] = topic.homeworks[n - 1 - i]
         topic.homeworks[n - 1 - i] = temp
     }
+    // console.log(topic.homeworks)
 }
 
 const reverseTopic = (topics) => {
     const n = topics.length
-    for (let i = 0; i <= (n - 1) / 2; i++) {
+    for (let i = 0; i <= max(n / 2 - 1, 0); i++) {
+        console.log(i)
         const temp = topics[i]
         topics[i] = topics[n - 1 - i]
         topics[n - 1 - i] = temp
         reverseHomeworkIn1Topic(topics[i])
-        reverseHomeworkIn1Topic(topics[n - 1 - i])
+        if (n > 1) reverseHomeworkIn1Topic(topics[n - 1 - i])
     }
 }
 
@@ -90,7 +106,6 @@ class HomeworkController {
             if (!duplicateTopicId) {
                 duplicateTopicId = await addNewTopic(classId, topic)
             }
-            console.log(duplicateTopicId)
             for (let i = 0; i < topics.length; i++) {
                 for (let j = 0; j < topics[i].homeworks.length; j++) {
                     if (topics[i].homeworks[j].title === title) {
@@ -108,7 +123,6 @@ class HomeworkController {
             firebase.bucket.upload(file.path, options, async function(err, fileFirebase) {
                 const url = await getSignedUrlHomework(classId, title, file.filename)
                 attachedFiles.push(url[0])
-                console.log(duplicateTopicId)
                 try {
                     await saveHomeworkToMongodb(classId, title, creatorId, description, deadline, attachedFiles, topic, duplicateTopicId)
                     return res.status(200).json({ success: true, message: "Homework is added" })

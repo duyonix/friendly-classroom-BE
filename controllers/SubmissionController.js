@@ -7,27 +7,25 @@ class SubmissionController {
     submitSubmission = (req, res) => {
         try {
             const studentId = req.userId
-            const classId = req.body.classId
-            const title = req.body.title
+            const homeworkId = req.body.homeworkId
             const file = req.file
             if (!file) {
                 throw new Error("Not submission")
             }
             const newFilename = `${studentId}.${file.filename.split('.')[1]}`
             var optionsFirebase = {
-                    destination: `submission/${classId}/${title}/${newFilename}`
+                    destination: `submission/${homeworkId}/${newFilename}`
                 }
                 // console.log(optionsFirebase.destination)
             firebase.bucket.upload(file.path, optionsFirebase, async function(err, item) {
                 const status = 'DONE'
                 const attachedFiles = [newFilename]
-                const newSubmission = new Submission({ classId, title, studentId, status, attachedFiles })
-                await newSubmission.save()
-                return res.status(200).json({ success: true, message: 'Submitted' })
+                await Submission.updateOne({ homeworkId: homeworkId, studentId: studentId }, { $set: { attachedFiles: attachedFiles, status: 'DONE' } })
+                return res.status(200).json({ success: true, message: 'Nộp thành công' })
             })
         } catch (err) {
             if (err.message == "Not submission") {
-                return res.status(400).json({ success: false, message: 'Where is your submission ?' })
+                return res.status(400).json({ success: false, message: 'File bài làm của bạn đâu :(' })
             }
         }
 
@@ -35,13 +33,10 @@ class SubmissionController {
 
     getSubmission = async(req, res) => {
         try {
-            const userId = req.userId
+            const userId = req.userId // user who want to see submission
             const classId = req.body.classId
-            const title = req.body.title
-            const studentId = req.body.studentId
-
-            console.log(studentId)
-            console.log(userId)
+            const homeworkId = req.body.homeworkId
+            const studentId = req.body.studentId // the owner of submission user want to see
 
             // only teacher and that student can get his submission
             if (userId != studentId) {
@@ -51,13 +46,12 @@ class SubmissionController {
                 }
             }
 
-
-            const submission = await Submission.findOne({ classId: classId, studentId: studentId, title: title })
+            const submission = await Submission.findOne({ homeworkId: homeworkId, studentId: studentId })
             if (!submission) {
                 throw new Error("Not submit")
             }
 
-            const destinationFirebase = `submission/${classId}/${title}/${submission.attachedFiles[0]}`
+            const destinationFirebase = `submission/${homeworkId}/${submission.attachedFiles[0]}`
             const config = {
                 action: 'read',
                 expires: '08-08-2025'
@@ -112,8 +106,15 @@ class SubmissionController {
             return res.status(400).json({ success: false, message: 'ERROR' })
         }
     }
-    getAllSubmissionOfHomework = (req, res) => {
-
+    getAllSubmissionMetadataOfHomework = async(req, res) => {
+        const homeworkId = req.body.homeworkId
+        const result = await Submission.find({ homeworkId: homeworkId }, "studentId status score")
+            .populate({
+                path: "studentId",
+                select: "fullName username"
+            })
+        console.log(result)
+        return res.status(200).json(result)
     }
 }
 

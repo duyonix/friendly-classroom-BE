@@ -3,12 +3,9 @@ const Schema = mongoose.Schema;
 const { ObjectId } = mongoose.Schema.Types;
 
 const Submission = new Schema({
-    classroomId: {
+    homeworkId: {
         type: ObjectId,
-        ref: 'Classroom'
-    },
-    title: {
-        type: String
+        ref: 'Homework'
     },
     studentId: {
         type: ObjectId,
