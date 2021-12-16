@@ -12,7 +12,6 @@ var storage = multer.diskStorage({
         cb(null, file.originalname)
     }
 })
-
 const upload = multer({
     storage: storage,
 });
@@ -20,5 +19,6 @@ const upload = multer({
 router.post('/submitSubmission', auth, upload.single('file'), submissionController.submitSubmission)
 router.post('/getSubmission', auth, submissionController.getSubmission)
 router.post('/addCommentAndScore', auth, submissionController.addCommentAndScore)
+router.post('/getAllSubmissionMetadataOfHomework', auth, submissionController.getAllSubmissionMetadataOfHomework)
 
 module.exports = router

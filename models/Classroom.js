@@ -15,14 +15,14 @@ const Classroom = new Schema({
         type: String,
         required: true,
     },
-    listHomework: [{
+    /*listHomework: [{
         type: ObjectId,
         ref: 'Homework',
     }, ],
     listDocument: [{
         type: ObjectId,
         ref: 'Document',
-    }, ],
+    }, ],*/
     listPost: [{
         type: ObjectId,
         ref: 'Post',
@@ -37,7 +37,21 @@ const Classroom = new Schema({
     }, ],
     numberOfMember: {
         type: Number,
-    }
+    },
+    topicDocument: [{
+        topic: { type: String },
+        documents: [{
+            type: ObjectId,
+            ref: 'Document'
+        }]
+    }],
+    topicHomework: [{
+        topic: { type: String },
+        homeworks: [{
+            type: ObjectId,
+            ref: 'Homework'
+        }]
+    }]
 }, {
     timestamps: true,
 });

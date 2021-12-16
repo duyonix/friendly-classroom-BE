@@ -3,11 +3,27 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 const Comment = require('../models/Comment');
 const Classroom = require('../models/Classroom');
+const Submission = require('../models/Submission')
+
+const createDefaultSubmissionForEveryHomeworkInClass = async(code, studentId) => {
+    const result = await Classroom.findOne({ code: code }, "topicHomework")
+    const status = 'TO DO'
+    const attachedFiles = []
+    for (let i = 0; i < result.topicHomework.length; i++) {
+        const topic = result.topicHomework[i]
+        for (let j = 0; j < topic.homeworks.length; j++) {
+            const homeworkId = topic.homeworks[j]
+            const newSubmission = new Submission({ homeworkId, studentId, status, attachedFiles })
+            newSubmission.save()
+        }
+    }
+}
 
 class ClassroomController {
-    get = async (req, res) => {
+    get = async(req, res) => {
         try {
-            const classroom = await Classroom.findById(req.params.classroomId);
+            const classroom = await Classroom.findById(req.params.classroomId,
+                "name code description listPost teacherId listStudent numberOfMember topicDocument.topic topicHomework.topic")
             res.json({ success: true, classroom });
         } catch (error) {
             console.log(error);
@@ -18,9 +34,8 @@ class ClassroomController {
         }
     };
 
-    create = async (req, res) => {
+    create = async(req, res) => {
         const { name, description } = req.body;
-
         try {
             // check if user is already teacher of another classroom which has the same name
 
@@ -40,12 +55,16 @@ class ClassroomController {
             }
 
             var numberOfMember = 1;
+            const topicDocument = []
+            const topicHomework = []
             const newClassroom = new Classroom({
                 name,
                 code,
                 description,
                 teacherId: req.userId,
                 numberOfMember,
+                topicDocument,
+                topicHomework
             });
             const result = await newClassroom.save();
             res.json({
@@ -72,7 +91,7 @@ class ClassroomController {
     // @route PUT api/posts
     // @desc Update post
     // @access Private
-    update = async (req, res) => {
+    update = async(req, res) => {
         const { name, description } = req.body;
 
         try {
@@ -95,12 +114,10 @@ class ClassroomController {
             };
 
             let updatedClassroom = await Classroom.findOneAndUpdate(
-                classroomUpdateCondition,
-                {
+                classroomUpdateCondition, {
                     name,
                     description,
-                },
-                { new: true }
+                }, { new: true }
             );
 
             // User not authorized to update classroom or classroom not found
@@ -128,7 +145,7 @@ class ClassroomController {
         }
     };
 
-    delete = async (req, res) => {
+    delete = async(req, res) => {
         try {
             const classroomDeleteCondition = {
                 _id: req.params.classroomId,
@@ -186,9 +203,8 @@ class ClassroomController {
         }
     };
 
-    join = async (req, res) => {
+    join = async(req, res) => {
         const { code } = req.body;
-
         try {
             let updatedClassroom = await Classroom.findOne({ code: code });
 
@@ -209,6 +225,8 @@ class ClassroomController {
             updatedMember.classStudent.push(updatedClassroom._id);
             await updatedMember.save();
 
+            await createDefaultSubmissionForEveryHomeworkInClass(code, req.userId)
+
             res.json({
                 success: true,
                 message: 'Tham gia lớp học thành công',
@@ -227,7 +245,7 @@ class ClassroomController {
             });
         }
     };
-    removeStudent = async (req, res) => {
+    removeStudent = async(req, res) => {
         const { studentId } = req.body;
 
         try {
@@ -306,7 +324,7 @@ class ClassroomController {
         }
     };
 
-    inviteStudent = async (req, res) => {
+    inviteStudent = async(req, res) => {
         const { username } = req.body;
 
         try {
@@ -359,7 +377,7 @@ class ClassroomController {
         }
     };
 
-    people = async (req, res) => {
+    people = async(req, res) => {
         try {
             const classroom = await Classroom.findById(req.params.classroomId).select('teacherId listStudent').populate('teacherId listStudent');
 

@@ -5,8 +5,6 @@ const cors = require('cors');
 const route = require('./routes');
 const db = require('./config/db');
 
-
-
 // connect to database mongodb
 db.connect()
 
