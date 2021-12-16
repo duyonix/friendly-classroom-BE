@@ -9,14 +9,17 @@ class SubmissionController {
             const studentId = req.userId
             const homeworkId = req.body.homeworkId
             const file = req.file
+
             if (!file) {
                 throw new Error("Not submission")
             }
+
+            // newFilename = {studentId}.{extension of file}
             const newFilename = `${studentId}.${file.filename.split('.')[1]}`
             var optionsFirebase = {
-                    destination: `submission/${homeworkId}/${newFilename}`
-                }
-                // console.log(optionsFirebase.destination)
+                destination: `submission/${homeworkId}/${newFilename}`
+            }
+
             firebase.bucket.upload(file.path, optionsFirebase, async function(err, item) {
                 const status = 'DONE'
                 const attachedFiles = [newFilename]
@@ -38,7 +41,7 @@ class SubmissionController {
             const homeworkId = req.body.homeworkId
             const studentId = req.body.studentId // the owner of submission user want to see
 
-            // only teacher and that student can get his submission
+            // only teacher and that student can see his submission
             if (userId != studentId) {
                 const isOK = await UserController.isUserATeacherOfClass(userId, classId)
                 if (!isOK) {
@@ -46,6 +49,7 @@ class SubmissionController {
                 }
             }
 
+            // Maybe we dont need this because every student will have default submission
             const submission = await Submission.findOne({ homeworkId: homeworkId, studentId: studentId })
             if (!submission) {
                 throw new Error("Not submit")
@@ -66,11 +70,6 @@ class SubmissionController {
                 }
 
                 return res.status(200).json({ success: true, submission, downloadURL: url })
-
-                const file = fs.createWriteStream("./uploads/files.pdf");
-                const request = https.get(url, function(response) {
-                    response.pipe(file);
-                });
             });
         } catch (err) {
             if (err.message == "Rights") {
@@ -81,31 +80,22 @@ class SubmissionController {
         }
 
     }
+
     addCommentAndScore = async(req, res) => {
         try {
-            const userId = req.userId
             const score = req.body.score
             const comment = req.body.comment
-            const classId = req.body.classId
-            const title = req.body.title
-            const studentName = req.body.studentName
+            const studentId = req.body.studentId
+            const homeworkId = req.body.homeworkId
 
-            // only teacher can add comment and score
-            const isOK = await UserController.isUserATeacherOfClass(userId, classId)
-            if (!isOK) {
-                throw new Error("Rights")
-            }
-
-            await Submission.findOneAndUpdate({ classId: classId, title: title, studentName: studentName }, { $set: { score: score, comment: comment } })
-            return res.status(200).json({ success: true, message: 'Added' })
+            await Submission.findOneAndUpdate({ homeworkId: homeworkId, studentId: studentId }, { $set: { score: score, comment: comment } })
+            return res.status(200).json({ success: true, message: 'Đã thêm comment và điểm' })
         } catch (err) {
-            if (err.message == "Rights") {
-                return res.status(400).json({ success: false, message: 'Only teacher of class can add comment and score' })
-            }
             console.log(err)
-            return res.status(400).json({ success: false, message: 'ERROR' })
+            return res.status(400).json({ success: false, message: 'Lỗi rồi :(' })
         }
     }
+
     getAllSubmissionMetadataOfHomework = async(req, res) => {
         const homeworkId = req.body.homeworkId
         const result = await Submission.find({ homeworkId: homeworkId }, "studentId status score")
@@ -113,7 +103,6 @@ class SubmissionController {
                 path: "studentId",
                 select: "fullName username"
             })
-        console.log(result)
         return res.status(200).json(result)
     }
 }

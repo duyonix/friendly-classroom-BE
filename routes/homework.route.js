@@ -18,9 +18,9 @@ const upload = multer({
 });
 
 router.post('/createHomework', auth, upload.single('file'), homeworkController.createHomework)
-router.post('/removeHomework', homeworkController.removeHomework)
-router.post('/getAllHomeworkMetadataOfClass', homeworkController.getAllHomeworkMetadataOfClass)
-router.post('/getHomeworkDetail', homeworkController.getHomeworkDetail)
-router.post('/changeHomeworkDeadline', homeworkController.editHomeworkDeadline)
+router.post('/removeHomework', auth, homeworkController.removeHomework)
+router.post('/getAllHomeworkMetadataOfClass', auth, homeworkController.getAllHomeworkMetadataOfClass)
+router.post('/getHomeworkDetail', auth, homeworkController.getHomeworkDetail)
+router.post('/changeHomeworkDeadline', auth, homeworkController.editHomeworkDeadline)
 
 module.exports = router
