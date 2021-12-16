@@ -17,9 +17,7 @@ class PostController {
                         { path: 'postedBy', select: 'username' },
                         {
                             path: 'listComment',
-                            populate: [
-                                { path: 'commentedBy', select: 'username' },
-                            ],
+                            populate: [{ path: 'commentedBy', select: 'username' }],
                             options: {
                                 sort: { createdAt: -1 },
                             },
@@ -69,12 +67,11 @@ class PostController {
         }
     };
     create = async (req, res) => {
-        const { title, body } = req.body;
+        const { body } = req.body;
 
         try {
             const newPost = new Post({
                 classroomId: req.params.classroomId,
-                title,
                 body,
                 postedBy: req.userId,
             });
@@ -102,7 +99,7 @@ class PostController {
         }
     };
     update = async (req, res) => {
-        const { title, body } = req.body;
+        const { body } = req.body;
 
         try {
             const postUpdateCondition = {
@@ -113,16 +110,13 @@ class PostController {
             let updatedPost = await Post.findOneAndUpdate(
                 postUpdateCondition,
                 {
-                    title,
                     body,
                 },
                 { new: true }
             );
 
             if (!updatedPost) {
-                throw new Error(
-                    'Không tìm thấy post hoặc bạn không có quyền chỉnh sửa thông tin post này'
-                );
+                throw new Error('Không tìm thấy post hoặc bạn không có quyền chỉnh sửa thông tin post này');
             }
 
             res.json({
@@ -154,18 +148,14 @@ class PostController {
             Comment.deleteMany({ postId: req.params.postId });
 
             // remove from Classroom
-            let updatedClassroom = await Classroom.findById(
-                req.params.classroomId
-            );
+            let updatedClassroom = await Classroom.findById(req.params.classroomId);
             updatedClassroom.listPost.pull(req.params.postId);
             await updatedClassroom.save();
 
             const deletePost = await Post.findOneAndDelete(postDeleteCondition);
 
             if (!deletePost) {
-                throw new Error(
-                    'Không tìm thấy post hoặc bạn không có quyền xóa post này'
-                );
+                throw new Error('Không tìm thấy post hoặc bạn không có quyền xóa post này');
             }
 
             res.json({

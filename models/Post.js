@@ -7,10 +7,6 @@ const Post = new Schema(
             type: ObjectId,
             ref: 'Classroom',
         },
-        title: {
-            type: String,
-            required: true,
-        },
         body: {
             type: String,
             required: true,
