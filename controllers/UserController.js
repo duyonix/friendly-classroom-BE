@@ -84,8 +84,7 @@ class UserController {
                     return
                 }
             });*/
-<<<<<<< HEAD
-        console.log(user);
+        // console.log(user)
         if (user.length > 0) return true;
         else return false;
     };
@@ -93,16 +92,6 @@ class UserController {
         const user = await User.findOne({ _id: userId }, 'classStudent');
         var isOK = false;
         user.classStudent.forEach((element) => {
-=======
-            // console.log(user)
-        if (user.length > 0) return true
-        else return false
-    }
-    isUserAStudentOfClass = async(userId, classId) => {
-        const user = await User.findOne({ _id: userId }, "classStudent")
-        var isOK = false
-        user.classStudent.forEach(element => {
->>>>>>> main
             // console.log(element.toString())
             // console.log(classId)
             if (element.toString() === classId) {
