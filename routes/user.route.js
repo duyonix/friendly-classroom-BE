@@ -1,23 +1,25 @@
-const router = require('express').Router()
+const router = require('express').Router();
 
-const userController = require('../controllers/UserController')
+const userController = require('../controllers/UserController');
 
 const multer = require('multer');
 var storage = multer.diskStorage({
-    destination: function(req, file, cb) {
+    destination: function (req, file, cb) {
         cb(null, 'uploads/');
     },
-    filename: function(req, file, cb) {
-        cb(null, file.originalname)
-    }
-})
+    filename: function (req, file, cb) {
+        cb(null, file.originalname);
+    },
+});
 const upload = multer({
     storage: storage,
 });
 
-const auth = require('../middleware/auth')
+const auth = require('../middleware/auth');
 
-router.get('/getInformation', auth, userController.getInformation)
-router.post('/changeAvatar', auth, upload.single('avatar'), userController.changeAvatar)
+router.get('/getInformation', auth, userController.getInformation);
+router.post('/changeAvatar', auth, upload.single('avatar'), userController.changeAvatar);
+router.post('/calendar', auth, userController.calendar);
+router.post('/todo', auth, userController.todo);
 
-module.exports = router
+module.exports = router;

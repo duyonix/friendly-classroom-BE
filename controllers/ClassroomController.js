@@ -103,10 +103,7 @@ class ClassroomController {
                     teacherId: req.userId,
                 });
 
-                if (
-                    checkDuplicateNameClassroom &&
-                    checkDuplicateNameClassroom._id != req.params.classroomId
-                ) {
+                if (checkDuplicateNameClassroom && checkDuplicateNameClassroom._id != req.params.classroomId) {
                     throw new Error('Tên lớp học bị trùng');
                 }
             }
@@ -125,9 +122,7 @@ class ClassroomController {
 
             // User not authorized to update classroom or classroom not found
             if (!updatedClassroom) {
-                throw new Error(
-                    'Bạn không có quyền chỉnh sửa thông tin lớp này'
-                );
+                throw new Error('Bạn không có quyền chỉnh sửa thông tin lớp này');
             }
 
             res.json({
@@ -157,9 +152,7 @@ class ClassroomController {
                 teacherId: req.userId,
             };
 
-            const deleteClassroom = await Classroom.findOne(
-                classroomDeleteCondition
-            ).lean();
+            const deleteClassroom = await Classroom.findOne(classroomDeleteCondition).lean();
 
             if (!deleteClassroom) {
                 throw new Error('Bạn không có quyền xóa lớp này');
@@ -219,10 +212,7 @@ class ClassroomController {
                 throw new Error('Không tìm thấy lớp học này');
             }
 
-            if (
-                updatedClassroom.teacherId == req.userId ||
-                updatedClassroom.listStudent.includes(req.userId)
-            ) {
+            if (updatedClassroom.teacherId == req.userId || updatedClassroom.listStudent.includes(req.userId)) {
                 throw new Error('Người dùng đã tham gia lớp này');
             }
 
@@ -264,9 +254,7 @@ class ClassroomController {
                 teacherId: req.userId,
             };
 
-            let updatedClassroom = await Classroom.findOne(
-                classroomUpdateCondition
-            );
+            let updatedClassroom = await Classroom.findOne(classroomUpdateCondition);
 
             if (!updatedClassroom) {
                 throw new Error('Bạn không có quyền xóa học sinh');
@@ -299,6 +287,42 @@ class ClassroomController {
             });
         }
     };
+    leaveClassroom = async (req, res) => {
+        try {
+            let updatedClassroom = await Classroom.findOne({ _id: req.params.classroomId });
+
+            if (updatedClassroom.teacherId == req.userId) {
+                throw new Error('Giáo viên không được phép rời lớp!');
+            }
+
+            updatedClassroom.listStudent.pull({ _id: req.userId });
+
+            updatedClassroom.numberOfMember -= 1;
+            await updatedClassroom.save();
+
+            // TODO: cập nhật danh sách classroom cũa user
+            let updatedMember = await User.findOne({ _id: req.userId });
+            updatedMember.classStudent.pull({ _id: req.params.classroomId });
+
+            await updatedMember.save();
+            res.json({
+                success: true,
+                message: 'Rời lớp học thành công',
+                classroom: updatedClassroom,
+            });
+        } catch (error) {
+            if (error.message)
+                res.status(400).json({
+                    success: false,
+                    message: error.message,
+                });
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'Lỗi rồi :(',
+            });
+        }
+    };
 
     inviteStudent = async(req, res) => {
         const { username } = req.body;
@@ -309,9 +333,7 @@ class ClassroomController {
                 teacherId: req.userId,
             };
 
-            let updatedClassroom = await Classroom.findOne(
-                classroomUpdateCondition
-            );
+            let updatedClassroom = await Classroom.findOne(classroomUpdateCondition);
 
             if (!updatedClassroom) {
                 throw new Error('Bạn không có quyền thêm học sinh');
@@ -357,9 +379,7 @@ class ClassroomController {
 
     people = async(req, res) => {
         try {
-            const classroom = await Classroom.findById(req.params.classroomId)
-                .select('teacherId listStudent')
-                .populate('teacherId listStudent');
+            const classroom = await Classroom.findById(req.params.classroomId).select('teacherId listStudent').populate('teacherId listStudent');
 
             res.json({ success: true, classroom });
         } catch (error) {

@@ -10,8 +10,6 @@ const submissionRoute = require('./submission.route');
 // const todoRoute = require('./todo.route')
 const accessClassroom = require('../middleware/accessClassroom');
 
-const classroomController = require('../controllers/ClassroomController');
-
 function route(app) {
     app.use('/api/authorize', authorizeRoute);
     app.use('/api/user', userRoute);
@@ -20,17 +18,9 @@ function route(app) {
     app.use('/api/submission', submissionRoute);
     // app.use('/api/todo', todoRoute)
 
-    app.put('/api/classroom/join', auth, classroomController.join);
-    app.post('/api/classroom/create', auth, classroomController.create);
-
-    app.use('/api/:classroomId/post', auth, accessClassroom, postRoute);
-    app.use(
-        '/api/:classroomId/:postId/comment',
-        auth,
-        accessClassroom,
-        commentRoute
-    );
-    app.use('/api/:classroomId', auth, accessClassroom, classroomRoute);
+    app.use('/api/classroom/:classroomId/post', auth, accessClassroom, postRoute);
+    app.use('/api/classroom/:classroomId/post/:postId/comment', auth, accessClassroom, commentRoute);
+    app.use('/api/classroom', auth, classroomRoute);
 }
 
 module.exports = route;
