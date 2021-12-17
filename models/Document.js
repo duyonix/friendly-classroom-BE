@@ -4,8 +4,8 @@ const { ObjectId } = mongoose.Schema.Types
 
 const Document = new mongoose.Schema({
     classId: {
-        type: String,
-        required: true,
+        type: ObjectId,
+        ref: 'Classroom'
     },
     title: {
         type: String,

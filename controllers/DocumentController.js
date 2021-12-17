@@ -114,7 +114,7 @@ class DocumentController {
             };
             await firebase.bucket.upload(file.path, options)
 
-            const url = await getSignedUrlDocument(_id, file.filename)
+            const url = await getSignedUrlDocument(_id, file.filename) P
             attachedFiles.push(url[0])
             await saveDocumentToMongoDB(_id, classId, title, description, creatorId, attachedFiles, topic, duplicateTopicId)
             return res.status(200).json({ success: true, message: 'Đã tải lên tài liệu thành công' })
