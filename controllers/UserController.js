@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema.Types;
 
 const Homework = require('../models/Homework');
+const Submission = require('../models/Submission');
 
 getSignedUrlAvatar = async (filename) => {
     const destinationFirebase = `avatar/${filename}`;
@@ -72,49 +73,38 @@ class UserController {
             return res.status(400).json({ success: false, message: 'Lỗi rồi :<' });
         }
     };
-    isUserATeacherOfClass = async (userId, classId) => {
+    isUserATeacherOfClass = async (userId, classroomId) => {
         const user = await User.find({
             _id: userId,
-            classTeacher: { $in: [classId] },
+            classTeacher: { $in: [classroomId] },
         });
         /*var isOK = false
             user.classTeacher.forEach(element => {
-                if (element.toString() === classId) {
+                if (element.toString() === classroomId) {
                     isOK = true
                     return
                 }
             });*/
-<<<<<<< HEAD
-        console.log(user);
+        // console.log(user)
         if (user.length > 0) return true;
         else return false;
     };
-    isUserAStudentOfClass = async (userId, classId) => {
+    isUserAStudentOfClass = async (userId, classroomId) => {
         const user = await User.findOne({ _id: userId }, 'classStudent');
         var isOK = false;
         user.classStudent.forEach((element) => {
-=======
-            // console.log(user)
-        if (user.length > 0) return true
-        else return false
-    }
-    isUserAStudentOfClass = async(userId, classId) => {
-        const user = await User.findOne({ _id: userId }, "classStudent")
-        var isOK = false
-        user.classStudent.forEach(element => {
->>>>>>> main
             // console.log(element.toString())
-            // console.log(classId)
-            if (element.toString() === classId) {
+            // console.log(classroomId)
+            if (element.toString() === classroomId) {
                 isOK = true;
                 return;
             }
         });
         return isOK;
     };
-    isUserAMemberOfClass = async (userId, classId) => {
+    isUserAMemberOfClass = async (userId, classroomId) => {
         const user = await User.findOne({ _id: userId }, 'classStudent classTeacher');
-        if (classId in user.classStudent || classId in user.classTeacher) {
+        if (classroomId in user.classStudent || classroomId in user.classTeacher) {
             return true;
         }
         return false;
@@ -122,10 +112,50 @@ class UserController {
 
     // ydam
     todo = async (req, res) => {
-        return res.status(200).json({ success: true, message: 'đây là todo' });
+        try {
+            let submissions = await Submission.find({ studentId: req.userId })
+                .select('homeworkId markDone')
+                .populate('homeworkId')
+                .populate({
+                    path: 'homeworkId',
+                    populate: [{ path: 'classroomId', select: 'name' }],
+                    options: {
+                        sort: { deadline: -1 },
+                    },
+                    select: 'classroomId title topic deadline',
+                });
+
+            res.json({ success: true, submissions: submissions });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'Lỗi rồi :(',
+            });
+        }
     };
     calendar = async (req, res) => {
-        return res.status(200).json({ success: true, message: 'đây là calendar' });
+        try {
+            let submissions = await Submission.find({ studentId: req.userId })
+                .select('homeworkId markDone')
+                .populate('homeworkId')
+                .populate({
+                    path: 'homeworkId',
+                    populate: [{ path: 'classroomId', select: 'name' }],
+                    options: {
+                        sort: { deadline: -1 },
+                    },
+                    select: 'classroomId title topic deadline',
+                });
+
+            res.json({ success: true, submissions: submissions });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'Lỗi rồi :(',
+            });
+        }
     };
 }
 
