@@ -19,7 +19,7 @@ const auth = require('../middleware/auth');
 
 router.get('/getInformation', auth, userController.getInformation);
 router.post('/changeAvatar', auth, upload.single('avatar'), userController.changeAvatar);
-router.post('/calendar', auth, userController.calendar);
-router.post('/todo', auth, userController.todo);
+router.get('/calendar', auth, userController.calendar);
+router.get('/todo', auth, userController.todo);
 
 module.exports = router;
