@@ -1,31 +1,31 @@
 const { Binary } = require('bson');
 const mongoose = require('mongoose');
-const { ObjectId } = mongoose.Schema.Types
+const { ObjectId } = mongoose.Schema.Types;
 
 const Document = new mongoose.Schema({
-    classId: {
+    classroomId: {
         type: ObjectId,
         ref: 'Classroom'
     },
     title: {
         type: String,
-        required: true
+        required: true,
     },
     description: {
         type: String,
     },
     creatorId: {
         type: ObjectId,
-        ref: 'User'
+        ref: 'User',
     },
     attachedFiles: [{
         type: String,
     }, ],
     topic: {
-        type: String
-    }
+        type: String,
+    },
 }, {
-    timestamps: true
+    timestamps: true,
 });
 
 module.exports = mongoose.model('Document', Document);
