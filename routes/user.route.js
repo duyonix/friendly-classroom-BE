@@ -21,6 +21,6 @@ router.get('/getInformation', auth, userController.getInformation);
 router.post('/changeAvatar', auth, upload.single('avatar'), userController.changeAvatar);
 router.get('/calendar', auth, userController.calendar);
 router.get('/todo', auth, userController.todo);
-router.post('/changeInformation', auth, upload.single('avatar'), userController.changeInformation)
+router.post('/changeInformation', auth, userController.changeInformation)
 
 module.exports = router;

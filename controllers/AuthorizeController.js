@@ -60,13 +60,15 @@ class AuthorizeController {
             password = await argon2.hash(password);
             const avatarUrls = await getSignedUrlNotAvatar(fullName)
             const avatarUrl = avatarUrls[0]
+            const ifHasAvatar = false
             const newUser = new User({
                 username,
                 password,
                 fullName,
                 email,
                 phoneNumber,
-                avatarUrl
+                avatarUrl,
+                ifHasAvatar
             });
             await newUser.save();
             res.status(200).json({ success: true, message: 'Người dùng đã được tạo' });

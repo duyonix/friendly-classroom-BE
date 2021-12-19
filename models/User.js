@@ -28,6 +28,9 @@ const User = new mongoose.Schema({
     avatarUrl: {
         type: String,
     },
+    ifHasAvatar: {
+        type: Boolean,
+    },
     classStudent: [{
         type: ObjectId,
         ref: 'Classroom',

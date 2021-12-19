@@ -11,7 +11,7 @@ getSignedUrlAvatar = async(filename) => {
     const destinationFirebase = `avatar/${filename}`;
     const config = {
         action: 'read',
-        expires: '03-17-2025',
+        expires: '08-08-2025',
     };
     const url = await firebase.bucket.file(destinationFirebase).getSignedUrl(config);
     return url;
@@ -36,12 +36,24 @@ const getFilenameExtension = (filename) => {
     return names[names.length - 1]
 }
 
+createDefaultAvatarForUser = async(fullName) => {
+    const splited = fullName.split(' ')
+    const character = splited[splited.length - 1][0].toUpperCase()
+    const destinationFirebase = `avatar/not avatar/${character}.jpg`
+    const config = {
+        action: 'read',
+        expires: '08-08-2025'
+    };
+    const url = await firebase.bucket.file(destinationFirebase).getSignedUrl(config);
+    return url
+}
+
 class UserController {
     getInformation = (req, res) => {
         try {
             const userId = req.userId;
             const username = req.username;
-            User.findOne({ username: username })
+            User.findOne({ _id: userId })
                 .populate({
                     path: 'classStudent classTeacher',
                     select: 'name code description teacherId numberOfMember',
@@ -64,7 +76,8 @@ class UserController {
             console.log(err);
         }
     };
-    changeAvatar = (req, res) => {
+
+    changeAvatar = async(req, res) => {
         try {
             const username = req.username;
             const userId = req.userId;
@@ -85,7 +98,7 @@ class UserController {
                     return res.status(400).json({ success: false, message: 'Lỗi rồi :<' });
                 }
                 const signedUrl = await getSignedUrlAvatar(filename);
-                await User.updateOne({ username: username }, { $set: { avatarUrl: signedUrl[0] } });
+                await User.findOneAndUpdate({ _id: userId }, { $set: { avatarUrl: signedUrl[0], ifHasAvatar: true } });
                 return res.status(200).json({ success: true, message: 'Thay đổi avatar thành công !!!' });
             });
         } catch (err) {
@@ -185,29 +198,27 @@ class UserController {
             const phoneNumber = req.body.phoneNumber;
             const fullName = req.body.fullName;
             const userId = req.userId
-            const file = req.file
-            const ext = getFilenameExtension(file.filename)
-            const filename = `${userId}.${ext}`
-            password = await argon2.hash(password)
+
             if (!checkEmail(email)) throw new Error("not a email")
             if (!checkPhoneNumber(phoneNumber)) throw new Error("not a phone number")
 
             const user = await User.findOne({ username });
-            if (user) {
+            if (user && !(user._id == userId)) {
                 throw new Error("Username already taken")
             }
-            password = await argon2.hash(password);
-            // TODO: consider how to delete old avatar in Firebase
-            const options = {
-                destination: `avatar/${filename}`
+            password = await argon2.hash(password)
+            if (user.ifHasAvatar == undefined || !user.ifHasAvatar) {
+                const urls = await createDefaultAvatarForUser(fullName)
+                await User.updateOne({ _id: userId }, { $set: { username: username, password: password, email: email, phoneNumber: phoneNumber, fullName: fullName, avatarUrl: urls[0], ifHasAvatar: false } })
+                return res.status(200).json({ success: true, message: 'Change user information successfully' })
             }
-            await firebase.bucket.upload(file.path, options)
-            const urls = getSignedUrlAvatar(filename)
-            await User.updateOne({ _id: userId }, { username: username, password: password, email: email, phoneNumber: phoneNumber, fullName: fullName, avatarUrl: urls[0] })
+            await User.updateOne({ _id: userId }, { $set: { username: username, password: password, email: email, phoneNumber: phoneNumber, fullName: fullName } })
             return res.status(200).json({ success: true, message: 'Change user information successfully' })
         } catch (err) {
-            if (err.message === 'not a email') return res.status(400).json({ success: false, message: 'Email sai dinh dang' })
-            else if (err.message === 'not a phone number') return res.status(400).json({ success: false, message: 'So dien thoai sai dinh dang' })
+            if (err.message === 'not a email') return res.status(400).json({ success: false, message: 'Email sai định dạng' })
+            else if (err.message === 'not a phone number') return res.status(400).json({ success: false, message: 'Số điện thoại sai định dạng' })
+            else if (err.message === "Username already taken")
+                return res.status(400).json({ success: false, message: 'Tên người dùng đã tồn tại' })
             else {
                 console.log(err)
                 return res.status(400).json({ success: false, message: 'Loi roi :(' })
