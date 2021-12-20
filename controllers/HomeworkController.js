@@ -144,7 +144,7 @@ class HomeworkController {
             return res.status(200).json({ success: true, message: 'Bài tập đã thêm thành công' });
         } catch (err) {
             if (err.message == 'Rights') {
-                return res.status(400).json({ success: false, message: 'Only teacher can create homework' });
+                return res.status(400).json({ success: false, message: 'Chỉ có giáo viên mới được thêm bài tập' });
             } else if (err.message === '2 homeworks have same name in 1 class') {
                 return res.status(400).json({ success: false, message: 'Không thể có 2 bài tập về nhà cùng tên được' });
             } else {

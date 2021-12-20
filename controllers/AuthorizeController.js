@@ -114,7 +114,9 @@ class AuthorizeController {
                         throw new Error("Wrong password")
                     }
                     const token = generateToken(user);
-                    return res.status(200).json({ success: true, token });
+                    user.password = undefined
+                    user.username = undefined
+                    return res.status(200).json({ success: true, token, user });
                 } catch (err) {
                     if (err.message == "Wrong password")
                         return res.status(400).json({ success: false, message: 'Sai mật khẩu' })
