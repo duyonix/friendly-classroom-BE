@@ -91,6 +91,11 @@ const checkIfDuplicate = async(classroomId, topic) => {
     return { duplicateTopicId, topics };
 };
 
+Number.prototype.padLeft = function(base, chr) {
+    var len = (String(base || 10).length - String(this).length) + 1;
+    return len > 0 ? new Array(len).join(chr || '0') + this : this;
+}
+
 class HomeworkController {
     createHomework = async(req, res) => {
         try {
@@ -99,9 +104,19 @@ class HomeworkController {
             const classroomId = req.body.classroomId;
             const title = req.body.title;
             const description = req.body.description;
-            const deadline = req.body.deadline; // yyyy/mm/dd hh:mm:ss
+            const deadlineISO = req.body.deadline; // yyyy/mm/dd hh:mm:ss
+
             const topic = req.body.topic;
             const attachedFiles = [];
+
+            const d = new Date(deadlineISO)
+            const deadline = [(d.getMonth() + 1).padLeft(),
+                d.getDate().padLeft(),
+                d.getFullYear()
+            ].join('/') + ' ' + [d.getHours().padLeft(),
+                d.getMinutes().padLeft(),
+                d.getSeconds().padLeft()
+            ].join(':');
 
             /*
             // Only teacher of class can create homework
