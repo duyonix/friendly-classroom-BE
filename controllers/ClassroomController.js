@@ -385,7 +385,7 @@ class ClassroomController {
                 throw new Error('Học sinh này đã tham gia lớp học');
             }
 
-            if (updatedClassroom.teacherId == student._id) {
+            if (req.userId == student._id) {
                 throw new Error('Bạn đã tham gia lớp học');
             }
 
