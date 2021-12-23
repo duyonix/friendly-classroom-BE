@@ -82,13 +82,17 @@ const checkIfDuplicate = async(classroomId, topic) => {
     });
     const topics = updatedClassroom.topicHomework;
     var duplicateTopicId = null;
+    var isTheLastHomeworkOfTopic = false
     for (let i = 0; i < topics.length; i++) {
         if (topics[i].topic === topic) {
             duplicateTopicId = topics[i]._id;
+            if (topics[i].homeworks.length == 1) {
+                isTheLastHomeworkOfTopic = true
+            }
             break;
         }
     }
-    return { duplicateTopicId, topics };
+    return { duplicateTopicId, topics, isTheLastHomeworkOfTopic };
 };
 
 Number.prototype.padLeft = function(base, chr) {
@@ -108,11 +112,11 @@ const changeDeadlineISOToDeadline = (deadlineISO) => {
     return deadline
 }
 
-const checkIfDuplicateTitle = (topics, title) => {
+const checkIfDuplicateTitle = (topics, title, homeworkId) => {
     // check if exists another documents with same title in class
     for (let i = 0; i < topics.length; i++) {
         for (let j = 0; j < topics[i].homeworks.length; j++) {
-            if (topics[i].homeworks[j].title === title) {
+            if (topics[i].homeworks[j].title === title && topics[i].homeworks[j]._id != homeworkId) {
                 return true
             }
         }
@@ -131,8 +135,11 @@ const getIdOfTopic = (topics, topic) => {
     return topicId
 }
 
-const changeTopic = async(duplicateTopicId, topicId, topic, homeworkId, classroomId) => {
-    await Classroom.updateOne({ 'topicHomework._id': duplicateTopicId }, { $pull: { 'topicHomework.$.homeworks': homeworkId } })
+const changeTopic = async(duplicateTopicId, topicId, topic, homeworkId, classroomId, isTheLastHomeworkOfTopic) => {
+    if (isTheLastHomeworkOfTopic) {
+        await Classroom.updateOne({ _id: classroomId }, { $pull: { topicHomework: { _id: duplicateTopicId } } })
+    } else await Classroom.updateOne({ 'topicHomework._id': duplicateTopicId }, { $pull: { 'topicHomework.$.homeworks': homeworkId } })
+
     if (!topicId) {
         topicId = await addNewTopic(classroomId, topic);
     }
@@ -162,7 +169,7 @@ class HomeworkController {
             }
             */
 
-            var { duplicateTopicId, topics } = await checkIfDuplicate(classroomId, topic);
+            var { duplicateTopicId, topics, isTheLastHomeworkOfTopic } = await checkIfDuplicate(classroomId, topic);
             if (!duplicateTopicId) {
                 duplicateTopicId = await addNewTopic(classroomId, topic);
             }
@@ -192,7 +199,7 @@ class HomeworkController {
             const url = await getSignedUrlHomework(_id, file.filename);
             attachedFiles.push(url[0]);
             await saveHomeworkToMongodb(_id, classroomId, title, creatorId, description, deadline, attachedFiles, topic, duplicateTopicId);
-            return res.status(200).json({ success: true, message: 'Bài tập đã thêm thành công' });
+            return res.status(200).json({ success: true, message: 'Bài tập đã thêm thành công', id: _id });
         } catch (err) {
             if (err.message == 'Rights') {
                 return res.status(400).json({ success: false, message: 'Chỉ có giáo viên mới được thêm bài tập' });
@@ -225,7 +232,6 @@ class HomeworkController {
             select: 'title deadline',
         });
         const topics = topicHomework.topicHomework;
-        console.log(topics)
         if (topics.length === 0) {
             return res.status(200).json(topics);
         }
@@ -270,8 +276,8 @@ class HomeworkController {
             const classId = updatedHomework.classroomId
             const oldTopic = updatedHomework.topic
 
-            var { duplicateTopicId, topics } = await checkIfDuplicate(classId, oldTopic)
-            const isTitleExist = checkIfDuplicateTitle(topics, title)
+            var { duplicateTopicId, topics, isTheLastHomeworkOfTopic } = await checkIfDuplicate(classId, oldTopic)
+            const isTitleExist = checkIfDuplicateTitle(topics, title, homeworkId)
             if (isTitleExist) {
                 throw new Error('2 homeworks have same title in 1 class')
             }
@@ -282,9 +288,8 @@ class HomeworkController {
             }
 
             var topicId = getIdOfTopic(topics, topic)
-
             if (oldTopic != topic) {
-                await changeTopic(duplicateTopicId, topicId, topic, homeworkId, classId)
+                await changeTopic(duplicateTopicId, topicId, topic, homeworkId, classId, isTheLastHomeworkOfTopic)
             }
 
             await Homework.findOneAndUpdate({ _id: homeworkId }, { $set: { title: title, description: description, topic: topic, deadline: deadline } })
@@ -296,6 +301,30 @@ class HomeworkController {
                 console.log(err);
                 res.status(400).json({ success: false, message: 'ERROR' });
             }
+        }
+    }
+
+    changeHomeworkFile = async(req, res) => {
+        try {
+            const homeworkId = req.body.homeworkId
+            const file = req.file
+
+            const options = {
+                destination: `homework/${homeworkId}/${file.filename}`,
+            };
+
+            await firebase.bucket.deleteFiles({
+                prefix: `homework/${homeworkId}`
+            })
+
+            await firebase.bucket.upload(file.path, options)
+            const urls = await getSignedUrlHomework(homeworkId, file.filename)
+
+            await Homework.updateOne({ _id: homeworkId }, { $set: { attachedFiles: urls } })
+            return res.status(200).json({ success: true, message: 'Thay đổi file cho bài tập thành công' })
+        } catch (err) {
+            console.log(err)
+            return res.status(400).json({ success: false, message: 'ERROR' })
         }
     }
 }

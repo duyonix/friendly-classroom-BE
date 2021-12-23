@@ -37,14 +37,18 @@ const checkIfDuplicate = async(classroomId, topic) => {
         select: 'title',
     });
     const topics = updatedClassroom.topicDocument;
+    var isTheLastDocumentOfTopic = false
     var duplicateTopicId = null;
     for (let i = 0; i < topics.length; i++) {
         if (topics[i].topic === topic) {
             duplicateTopicId = topics[i]._id;
+            if (topics[i].documents.length == 1) {
+                isTheLastDocumentOfTopic = true
+            }
             break;
         }
     }
-    return { duplicateTopicId, topics };
+    return { duplicateTopicId, topics, isTheLastDocumentOfTopic };
 };
 
 const reverseDocumentIn1Topic = (topic) => {
@@ -84,11 +88,11 @@ const getIdOfTopic = (topics, topic) => {
     return topicId
 }
 
-const checkIfDuplicateTitle = (topics, title) => {
+const checkIfDuplicateTitle = (topics, title, documentId) => {
     // check if exists another documents with same title in class
     for (let i = 0; i < topics.length; i++) {
         for (let j = 0; j < topics[i].documents.length; j++) {
-            if (topics[i].documents[j].title === title) {
+            if (topics[i].documents[j].title === title && topics[i].documents[j]._id != documentId) {
                 return true
             }
         }
@@ -96,12 +100,13 @@ const checkIfDuplicateTitle = (topics, title) => {
     return false
 }
 
-const changeTopic = async(duplicateTopicId, topicId, topic, documentId, classroomId) => {
-    await Classroom.updateOne({ 'topicDocument._id': duplicateTopicId }, { $pull: { 'topicDocument.$.documents': documentId } })
+const changeTopic = async(duplicateTopicId, topicId, topic, documentId, classroomId, isTheLastDocumentOfTopic) => {
+    if (isTheLastDocumentOfTopic) {
+        await Classroom.updateOne({ _id: classroomId }, { $pull: { topicDocument: { _id: duplicateTopicId } } })
+    } else await Classroom.updateOne({ 'topicDocument._id': duplicateTopicId }, { $pull: { 'topicDocument.$.documents': documentId } })
     if (!topicId) {
         topicId = await addNewTopic(classroomId, topic);
     }
-    console.log(topicId)
     await Classroom.updateOne({ 'topicDocument._id': topicId }, { $push: { 'topicDocument.$.documents': documentId } })
 }
 
@@ -114,8 +119,8 @@ class DocumentController {
             const creatorId = req.userId;
             const topic = req.body.topic;
 
-            var { duplicateTopicId, topics } = await checkIfDuplicate(classroomId, topic);
-            const isTitleExist = checkIfDuplicateTitle(topics, title)
+            var { duplicateTopicId, topics, isTheLastDocumentOfTopic } = await checkIfDuplicate(classroomId, topic);
+            const isTitleExist = checkIfDuplicateTitle(topics, title, null)
             if (isTitleExist) {
                 throw new Error('2 documents have same title in 1 class')
             }
@@ -211,8 +216,8 @@ class DocumentController {
             const classId = updatedDocument.classroomId
             const oldTopic = updatedDocument.topic
 
-            var { duplicateTopicId, topics } = await checkIfDuplicate(classId, oldTopic)
-            const isTitleExist = checkIfDuplicateTitle(topics, title)
+            var { duplicateTopicId, topics, isTheLastDocumentOfTopic } = await checkIfDuplicate(classId, oldTopic)
+            const isTitleExist = checkIfDuplicateTitle(topics, title, documentId)
             if (isTitleExist) {
                 throw new Error('2 documents have same title in 1 class')
             }
@@ -225,7 +230,7 @@ class DocumentController {
             var topicId = getIdOfTopic(topics, topic)
 
             if (oldTopic != topic) {
-                await changeTopic(duplicateTopicId, topicId, topic, documentId, classId)
+                await changeTopic(duplicateTopicId, topicId, topic, documentId, classId, isTheLastDocumentOfTopic)
             }
 
             await Document.findOneAndUpdate({ _id: documentId }, { $set: { title: title, description: description, topic: topic } })
@@ -237,6 +242,29 @@ class DocumentController {
                 console.log(err);
                 res.status(400).json({ success: false, message: 'ERROR' });
             }
+        }
+    }
+    changeDocumentFile = async(req, res) => {
+        try {
+            const documentId = req.body.documentId
+            const file = req.file
+
+            const options = {
+                destination: `document/${documentId}/${file.filename}`,
+            };
+
+            await firebase.bucket.deleteFiles({
+                prefix: `document/${documentId}`
+            })
+
+            await firebase.bucket.upload(file.path, options)
+            const urls = await getSignedUrlDocument(documentId, file.filename)
+
+            await Document.updateOne({ _id: documentId }, { $set: { attachedFiles: urls } })
+            return res.status(200).json({ success: true, message: 'Thay đổi file cho tài liệu thành công' })
+        } catch (err) {
+            console.log(err)
+            return res.status(400).json({ success: false, message: 'ERROR' })
         }
     }
 }
