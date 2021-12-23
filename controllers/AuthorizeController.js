@@ -60,13 +60,15 @@ class AuthorizeController {
             password = await argon2.hash(password);
             const avatarUrls = await getSignedUrlNotAvatar(fullName)
             const avatarUrl = avatarUrls[0]
+            const ifHasAvatar = false
             const newUser = new User({
                 username,
                 password,
                 fullName,
                 email,
                 phoneNumber,
-                avatarUrl
+                avatarUrl,
+                ifHasAvatar
             });
             await newUser.save();
             res.status(200).json({ success: true, message: 'Người dùng đã được tạo' });
@@ -112,7 +114,9 @@ class AuthorizeController {
                         throw new Error("Wrong password")
                     }
                     const token = generateToken(user);
-                    return res.status(200).json({ success: true, token });
+                    user.password = undefined
+                    user.username = undefined
+                    return res.status(200).json({ success: true, token, user });
                 } catch (err) {
                     if (err.message == "Wrong password")
                         return res.status(400).json({ success: false, message: 'Sai mật khẩu' })

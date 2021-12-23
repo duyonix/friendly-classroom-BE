@@ -3,6 +3,7 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 const Comment = require('../models/Comment');
 const Classroom = require('../models/Classroom');
+<<<<<<< HEAD
 const Submission = require('../models/Submission');
 
 const createDefaultSubmissionForEveryHomeworkInClass = async (
@@ -12,6 +13,14 @@ const createDefaultSubmissionForEveryHomeworkInClass = async (
     const result = await Classroom.findOne({ code: code }, 'topicHomework');
     const status = 'TO DO';
     const attachedFiles = [];
+=======
+const Submission = require('../models/Submission')
+
+const createDefaultSubmissionForEveryHomeworkInClass = async(code, studentId) => {
+    const result = await Classroom.findOne({ code: code }, "topicHomework")
+    const markDone = false
+    const attachedFiles = []
+>>>>>>> main
     for (let i = 0; i < result.topicHomework.length; i++) {
         const topic = result.topicHomework[i];
         for (let j = 0; j < topic.homeworks.length; j++) {
@@ -320,7 +329,7 @@ class ClassroomController {
             });
         }
     };
-    leaveClassroom = async (req, res) => {
+    leaveClassroom = async(req, res) => {
         try {
             let updatedClassroom = await Classroom.findOne({
                 _id: req.params.classroomId,

@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const Classroom = require('../models/Classroom');
 const Submission = require('../models/Submission');
 
-saveHomeworkToMongodb = async (_id, classroomId, title, creatorId, description, deadline, attachedFiles, topic, duplicateTopicId) => {
+saveHomeworkToMongodb = async(_id, classroomId, title, creatorId, description, deadline, attachedFiles, topic, duplicateTopicId) => {
     const newHomework = new Homework({ _id, classroomId, title, creatorId, description, deadline, attachedFiles, topic });
     await newHomework.save();
     createFakeSubmissionForEveryMemberInClass(classroomId, _id);
@@ -14,18 +14,18 @@ saveHomeworkToMongodb = async (_id, classroomId, title, creatorId, description, 
     await Classroom.updateOne({ 'topicHomework._id': duplicateTopicId }, { $push: { 'topicHomework.$.homeworks': _id } });
 };
 
-createFakeSubmissionForEveryMemberInClass = async (classroomId, homeworkId) => {
+createFakeSubmissionForEveryMemberInClass = async(classroomId, homeworkId) => {
     // When teacher create homework, every student in class have default submission
     const classMember = await Classroom.findOne({ _id: classroomId }, 'listStudent');
-    const status = 'TO DO';
+    const markDone = false;
     const attachedFiles = [];
     classMember.listStudent.forEach((studentId) => {
-        const newSubmission = new Submission({ homeworkId, studentId, status, attachedFiles });
+        const newSubmission = new Submission({ homeworkId, studentId, markDone, attachedFiles });
         newSubmission.save(); // consider to await
     });
 };
 
-getSignedUrlHomework = async (homeworkId, filename) => {
+getSignedUrlHomework = async(homeworkId, filename) => {
     const destinationFirebase = `homework/${homeworkId}/${filename}`;
     const config = {
         action: 'read',
@@ -65,13 +65,13 @@ const reverseTopic = (topics) => {
     }
 };
 
-const addNewTopic = async (classroomId, topic) => {
+const addNewTopic = async(classroomId, topic) => {
     var myId = mongoose.Types.ObjectId();
     await Classroom.updateOne({ _id: classroomId }, { $push: { topicHomework: { _id: myId, topic: topic, homeworks: [] } } });
     return myId;
 };
 
-const checkIfDuplicate = async (classroomId, topic) => {
+const checkIfDuplicate = async(classroomId, topic) => {
     /* check if we have same topic in class
      * return id of topic if yes, otherwise is null
      * return array of topics can be used for check if we have homework with same title in class
@@ -91,17 +91,32 @@ const checkIfDuplicate = async (classroomId, topic) => {
     return { duplicateTopicId, topics };
 };
 
+Number.prototype.padLeft = function(base, chr) {
+    var len = (String(base || 10).length - String(this).length) + 1;
+    return len > 0 ? new Array(len).join(chr || '0') + this : this;
+}
+
 class HomeworkController {
-    createHomework = async (req, res) => {
+    createHomework = async(req, res) => {
         try {
             const file = req.file;
             const creatorId = req.userId;
             const classroomId = req.body.classroomId;
             const title = req.body.title;
             const description = req.body.description;
-            const deadline = req.body.deadline; // yyyy/mm/dd hh:mm:ss
+            const deadlineISO = req.body.deadline; // yyyy/mm/dd hh:mm:ss
+
             const topic = req.body.topic;
             const attachedFiles = [];
+
+            const d = new Date(deadlineISO)
+            const deadline = [(d.getMonth() + 1).padLeft(),
+                d.getDate().padLeft(),
+                d.getFullYear()
+            ].join('/') + ' ' + [d.getHours().padLeft(),
+                d.getMinutes().padLeft(),
+                d.getSeconds().padLeft()
+            ].join(':');
 
             /*
             // Only teacher of class can create homework
@@ -144,7 +159,7 @@ class HomeworkController {
             return res.status(200).json({ success: true, message: 'Bài tập đã thêm thành công' });
         } catch (err) {
             if (err.message == 'Rights') {
-                return res.status(400).json({ success: false, message: 'Only teacher can create homework' });
+                return res.status(400).json({ success: false, message: 'Chỉ có giáo viên mới được thêm bài tập' });
             } else if (err.message === '2 homeworks have same name in 1 class') {
                 return res.status(400).json({ success: false, message: 'Không thể có 2 bài tập về nhà cùng tên được' });
             } else {
@@ -154,7 +169,7 @@ class HomeworkController {
         }
     };
     removeHomework = (req, res) => {};
-    editHomeworkDeadline = async (req, res) => {
+    editHomeworkDeadline = async(req, res) => {
         try {
             const classroomId = req.body.classroomId;
             const title = req.body.title;
@@ -166,7 +181,7 @@ class HomeworkController {
             return res.status(400).json({ success: false, message: 'Error in changing deadline' });
         }
     };
-    getAllHomeworkMetadataOfClass = async (req, res) => {
+    getAllHomeworkMetadataOfClass = async(req, res) => {
         // return title and deadline of all homework in 1 class
         const classroomId = req.body.classroomId;
         const topicHomework = await Classroom.findOne({ _id: classroomId }, 'topicHomework').populate({
@@ -180,7 +195,7 @@ class HomeworkController {
         return res.status(200).json(topics);
     };
 
-    getHomeworkDetail = async (req, res) => {
+    getHomeworkDetail = async(req, res) => {
         // get all information about homework
         try {
             const homeworkId = req.body.homeworkId;
