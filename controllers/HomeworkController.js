@@ -96,6 +96,49 @@ Number.prototype.padLeft = function(base, chr) {
     return len > 0 ? new Array(len).join(chr || '0') + this : this;
 }
 
+const changeDeadlineISOToDeadline = (deadlineISO) => {
+    const d = new Date(deadlineISO)
+    const deadline = [(d.getMonth() + 1).padLeft(),
+        d.getDate().padLeft(),
+        d.getFullYear()
+    ].join('/') + ' ' + [d.getHours().padLeft(),
+        d.getMinutes().padLeft(),
+        d.getSeconds().padLeft()
+    ].join(':');
+    return deadline
+}
+
+const checkIfDuplicateTitle = (topics, title) => {
+    // check if exists another documents with same title in class
+    for (let i = 0; i < topics.length; i++) {
+        for (let j = 0; j < topics[i].homeworks.length; j++) {
+            if (topics[i].homeworks[j].title === title) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
+const getIdOfTopic = (topics, topic) => {
+    var topicId = null;
+    for (let i = 0; i < topics.length; i++) {
+        if (topics[i].topic === topic) {
+            topicId = topics[i]._id;
+            break;
+        }
+    }
+    return topicId
+}
+
+const changeTopic = async(duplicateTopicId, topicId, topic, homeworkId, classroomId) => {
+    await Classroom.updateOne({ 'topicHomework._id': duplicateTopicId }, { $pull: { 'topicHomework.$.homeworks': homeworkId } })
+    if (!topicId) {
+        topicId = await addNewTopic(classroomId, topic);
+    }
+    await Classroom.updateOne({ 'topicHomework._id': topicId }, { $push: { 'topicHomework.$.homeworks': homeworkId } })
+}
+
 class HomeworkController {
     createHomework = async(req, res) => {
         try {
@@ -109,14 +152,7 @@ class HomeworkController {
             const topic = req.body.topic;
             const attachedFiles = [];
 
-            const d = new Date(deadlineISO)
-            const deadline = [(d.getMonth() + 1).padLeft(),
-                d.getDate().padLeft(),
-                d.getFullYear()
-            ].join('/') + ' ' + [d.getHours().padLeft(),
-                d.getMinutes().padLeft(),
-                d.getSeconds().padLeft()
-            ].join(':');
+            const deadline = changeDeadlineISOToDeadline(deadlineISO)
 
             /*
             // Only teacher of class can create homework
@@ -189,7 +225,10 @@ class HomeworkController {
             select: 'title deadline',
         });
         const topics = topicHomework.topicHomework;
-
+        console.log(topics)
+        if (topics.length === 0) {
+            return res.status(200).json(topics);
+        }
         // We need to reverse topics so newly topic will hoist to top
         reverseTopic(topics);
         return res.status(200).json(topics);
@@ -213,6 +252,52 @@ class HomeworkController {
             }
         }
     };
+
+    changeHomework = async(req, res) => {
+        try {
+            const homeworkId = req.body.homeworkId
+            const title = req.body.title
+            const description = req.body.description
+            const topic = req.body.topic
+            const deadlineISO = req.body.deadline
+            const deadline = changeDeadlineISOToDeadline(deadlineISO)
+
+            const updatedHomework = await Homework.findOne({ _id: homeworkId })
+            if (!updatedHomework) {
+                throw new Error("No homework")
+            }
+
+            const classId = updatedHomework.classroomId
+            const oldTopic = updatedHomework.topic
+
+            var { duplicateTopicId, topics } = await checkIfDuplicate(classId, oldTopic)
+            const isTitleExist = checkIfDuplicateTitle(topics, title)
+            if (isTitleExist) {
+                throw new Error('2 homeworks have same title in 1 class')
+            }
+
+            // consider to erase this block of code
+            if (!duplicateTopicId) {
+                throw new Error('ERROR')
+            }
+
+            var topicId = getIdOfTopic(topics, topic)
+
+            if (oldTopic != topic) {
+                await changeTopic(duplicateTopicId, topicId, topic, homeworkId, classId)
+            }
+
+            await Homework.findOneAndUpdate({ _id: homeworkId }, { $set: { title: title, description: description, topic: topic, deadline: deadline } })
+            return res.status(200).json({ success: true, message: "Change homework successfully" })
+        } catch (err) {
+            if (err.message == '2 homeworks have same title in 1 class') {
+                return res.status(400).json({ success: false, message: '1 lớp không thể có 2 bai tap cùng tên' });
+            } else {
+                console.log(err);
+                res.status(400).json({ success: false, message: 'ERROR' });
+            }
+        }
+    }
 }
 
 module.exports = new HomeworkController();

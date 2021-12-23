@@ -73,6 +73,38 @@ const reverseTopic = (topics) => {
     }
 };
 
+const getIdOfTopic = (topics, topic) => {
+    var topicId = null;
+    for (let i = 0; i < topics.length; i++) {
+        if (topics[i].topic === topic) {
+            topicId = topics[i]._id;
+            break;
+        }
+    }
+    return topicId
+}
+
+const checkIfDuplicateTitle = (topics, title) => {
+    // check if exists another documents with same title in class
+    for (let i = 0; i < topics.length; i++) {
+        for (let j = 0; j < topics[i].documents.length; j++) {
+            if (topics[i].documents[j].title === title) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
+const changeTopic = async(duplicateTopicId, topicId, topic, documentId, classroomId) => {
+    await Classroom.updateOne({ 'topicDocument._id': duplicateTopicId }, { $pull: { 'topicDocument.$.documents': documentId } })
+    if (!topicId) {
+        topicId = await addNewTopic(classroomId, topic);
+    }
+    console.log(topicId)
+    await Classroom.updateOne({ 'topicDocument._id': topicId }, { $push: { 'topicDocument.$.documents': documentId } })
+}
+
 class DocumentController {
     upload = async(req, res) => {
         try {
@@ -83,20 +115,15 @@ class DocumentController {
             const topic = req.body.topic;
 
             var { duplicateTopicId, topics } = await checkIfDuplicate(classroomId, topic);
+            const isTitleExist = checkIfDuplicateTitle(topics, title)
+            if (isTitleExist) {
+                throw new Error('2 documents have same title in 1 class')
+            }
             if (!duplicateTopicId) {
                 duplicateTopicId = await addNewTopic(classroomId, topic);
             }
 
-            const attachedFiles = [];
-
-            // check if exists another documents with same title in class
-            for (let i = 0; i < topics.length; i++) {
-                for (let j = 0; j < topics[i].documents.length; j++) {
-                    if (topics[i].documents[j].title === title) {
-                        throw new Error('2 documents have same title in 1 class');
-                    }
-                }
-            }
+            const attachedFiles = []
 
             const file = req.file;
 
@@ -162,9 +189,56 @@ class DocumentController {
             select: 'title createdAt',
         });
         const topics = topicDocument.topicDocument;
+        if (topics.length === 0) {
+            return res.status(200).json(topics);
+        }
         reverseTopic(topics);
         return res.status(200).json(topics);
     };
+
+    changeDocument = async(req, res) => {
+        try {
+            const documentId = req.body.documentId
+            const title = req.body.title
+            const description = req.body.description
+            const topic = req.body.topic
+
+            const updatedDocument = await Document.findOne({ _id: documentId })
+            if (!updatedDocument) {
+                throw new Error("No document")
+            }
+
+            const classId = updatedDocument.classroomId
+            const oldTopic = updatedDocument.topic
+
+            var { duplicateTopicId, topics } = await checkIfDuplicate(classId, oldTopic)
+            const isTitleExist = checkIfDuplicateTitle(topics, title)
+            if (isTitleExist) {
+                throw new Error('2 documents have same title in 1 class')
+            }
+
+            // consider to erase this block of code
+            if (!duplicateTopicId) {
+                throw new Error('ERROR')
+            }
+
+            var topicId = getIdOfTopic(topics, topic)
+
+            if (oldTopic != topic) {
+                await changeTopic(duplicateTopicId, topicId, topic, documentId, classId)
+            }
+
+            await Document.findOneAndUpdate({ _id: documentId }, { $set: { title: title, description: description, topic: topic } })
+            return res.status(200).json({ success: true, message: "Change document successfully" })
+        } catch (err) {
+            if (err.message == '2 documents have same title in 1 class') {
+                return res.status(400).json({ success: false, message: '1 lớp không thể có 2 tài liệu cùng tên' });
+            } else {
+                console.log(err);
+                res.status(400).json({ success: false, message: 'ERROR' });
+            }
+        }
+    }
 }
 
 module.exports = new DocumentController();
