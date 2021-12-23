@@ -3,27 +3,37 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 const Comment = require('../models/Comment');
 const Classroom = require('../models/Classroom');
-const Submission = require('../models/Submission')
+const Submission = require('../models/Submission');
 
-const createDefaultSubmissionForEveryHomeworkInClass = async(code, studentId) => {
-    const result = await Classroom.findOne({ code: code }, "topicHomework")
-    const status = 'TO DO'
-    const attachedFiles = []
+const createDefaultSubmissionForEveryHomeworkInClass = async (
+    code,
+    studentId
+) => {
+    const result = await Classroom.findOne({ code: code }, 'topicHomework');
+    const status = 'TO DO';
+    const attachedFiles = [];
     for (let i = 0; i < result.topicHomework.length; i++) {
-        const topic = result.topicHomework[i]
+        const topic = result.topicHomework[i];
         for (let j = 0; j < topic.homeworks.length; j++) {
-            const homeworkId = topic.homeworks[j]
-            const newSubmission = new Submission({ homeworkId, studentId, status, attachedFiles })
-            newSubmission.save()
+            const homeworkId = topic.homeworks[j];
+            const newSubmission = new Submission({
+                homeworkId,
+                studentId,
+                status,
+                attachedFiles,
+            });
+            newSubmission.save();
         }
     }
-}
+};
 
 class ClassroomController {
-    get = async(req, res) => {
+    get = async (req, res) => {
         try {
-            const classroom = await Classroom.findById(req.params.classroomId,
-                "name code description listPost teacherId listStudent numberOfMember topicDocument.topic topicHomework.topic")
+            const classroom = await Classroom.findById(
+                req.params.classroomId,
+                'name code description listPost teacherId listStudent numberOfMember topicDocument.topic topicHomework.topic'
+            );
             res.json({ success: true, classroom });
         } catch (error) {
             console.log(error);
@@ -34,7 +44,7 @@ class ClassroomController {
         }
     };
 
-    create = async(req, res) => {
+    create = async (req, res) => {
         const { name, description } = req.body;
         try {
             // check if user is already teacher of another classroom which has the same name
@@ -55,8 +65,8 @@ class ClassroomController {
             }
 
             var numberOfMember = 1;
-            const topicDocument = []
-            const topicHomework = []
+            const topicDocument = [];
+            const topicHomework = [];
             const newClassroom = new Classroom({
                 name,
                 code,
@@ -64,7 +74,7 @@ class ClassroomController {
                 teacherId: req.userId,
                 numberOfMember,
                 topicDocument,
-                topicHomework
+                topicHomework,
             });
             const result = await newClassroom.save();
             res.json({
@@ -74,7 +84,10 @@ class ClassroomController {
             });
 
             // Add classroom id to classTeacher
-            await User.findOneAndUpdate({ _id: req.userId }, { $push: { classTeacher: result._id } });
+            await User.findOneAndUpdate(
+                { _id: req.userId },
+                { $push: { classTeacher: result._id } }
+            );
         } catch (error) {
             if (error.message)
                 res.status(400).json({
@@ -91,7 +104,7 @@ class ClassroomController {
     // @route PUT api/posts
     // @desc Update post
     // @access Private
-    update = async(req, res) => {
+    update = async (req, res) => {
         const { name, description } = req.body;
 
         try {
@@ -103,7 +116,10 @@ class ClassroomController {
                     teacherId: req.userId,
                 });
 
-                if (checkDuplicateNameClassroom && checkDuplicateNameClassroom._id != req.params.classroomId) {
+                if (
+                    checkDuplicateNameClassroom &&
+                    checkDuplicateNameClassroom._id != req.params.classroomId
+                ) {
                     throw new Error('Tên lớp học bị trùng');
                 }
             }
@@ -114,15 +130,19 @@ class ClassroomController {
             };
 
             let updatedClassroom = await Classroom.findOneAndUpdate(
-                classroomUpdateCondition, {
+                classroomUpdateCondition,
+                {
                     name,
                     description,
-                }, { new: true }
+                },
+                { new: true }
             );
 
             // User not authorized to update classroom or classroom not found
             if (!updatedClassroom) {
-                throw new Error('Bạn không có quyền chỉnh sửa thông tin lớp này');
+                throw new Error(
+                    'Bạn không có quyền chỉnh sửa thông tin lớp này'
+                );
             }
 
             res.json({
@@ -145,14 +165,16 @@ class ClassroomController {
         }
     };
 
-    delete = async(req, res) => {
+    delete = async (req, res) => {
         try {
             const classroomDeleteCondition = {
                 _id: req.params.classroomId,
                 teacherId: req.userId,
             };
 
-            const deleteClassroom = await Classroom.findOne(classroomDeleteCondition).lean();
+            const deleteClassroom = await Classroom.findOne(
+                classroomDeleteCondition
+            ).lean();
 
             if (!deleteClassroom) {
                 throw new Error('Bạn không có quyền xóa lớp này');
@@ -203,7 +225,7 @@ class ClassroomController {
         }
     };
 
-    join = async(req, res) => {
+    join = async (req, res) => {
         const { code } = req.body;
         try {
             let updatedClassroom = await Classroom.findOne({ code: code });
@@ -212,7 +234,10 @@ class ClassroomController {
                 throw new Error('Không tìm thấy lớp học này');
             }
 
-            if (updatedClassroom.teacherId == req.userId || updatedClassroom.listStudent.includes(req.userId)) {
+            if (
+                updatedClassroom.teacherId == req.userId ||
+                updatedClassroom.listStudent.includes(req.userId)
+            ) {
                 throw new Error('Người dùng đã tham gia lớp này');
             }
 
@@ -225,7 +250,10 @@ class ClassroomController {
             updatedMember.classStudent.push(updatedClassroom._id);
             await updatedMember.save();
 
-            await createDefaultSubmissionForEveryHomeworkInClass(code, req.userId)
+            await createDefaultSubmissionForEveryHomeworkInClass(
+                code,
+                req.userId
+            );
 
             res.json({
                 success: true,
@@ -245,7 +273,7 @@ class ClassroomController {
             });
         }
     };
-    removeStudent = async(req, res) => {
+    removeStudent = async (req, res) => {
         const { studentId } = req.body;
 
         try {
@@ -254,10 +282,15 @@ class ClassroomController {
                 teacherId: req.userId,
             };
 
-            let updatedClassroom = await Classroom.findOne(classroomUpdateCondition);
+            let updatedClassroom = await Classroom.findOne(
+                classroomUpdateCondition
+            );
 
             if (!updatedClassroom) {
                 throw new Error('Bạn không có quyền xóa học sinh');
+            }
+            if (!classroom.listStudent.includes(studentId)) {
+                throw new Error('Học sinh này không có trong lớp');
             }
             updatedClassroom.listStudent.pull({ _id: studentId });
 
@@ -289,7 +322,9 @@ class ClassroomController {
     };
     leaveClassroom = async (req, res) => {
         try {
-            let updatedClassroom = await Classroom.findOne({ _id: req.params.classroomId });
+            let updatedClassroom = await Classroom.findOne({
+                _id: req.params.classroomId,
+            });
 
             if (updatedClassroom.teacherId == req.userId) {
                 throw new Error('Giáo viên không được phép rời lớp!');
@@ -324,7 +359,7 @@ class ClassroomController {
         }
     };
 
-    inviteStudent = async(req, res) => {
+    inviteStudent = async (req, res) => {
         const { username } = req.body;
 
         try {
@@ -333,7 +368,9 @@ class ClassroomController {
                 teacherId: req.userId,
             };
 
-            let updatedClassroom = await Classroom.findOne(classroomUpdateCondition);
+            let updatedClassroom = await Classroom.findOne(
+                classroomUpdateCondition
+            );
 
             if (!updatedClassroom) {
                 throw new Error('Bạn không có quyền thêm học sinh');
@@ -346,6 +383,10 @@ class ClassroomController {
             }
             if (updatedClassroom.listStudent.includes(student._id)) {
                 throw new Error('Học sinh này đã tham gia lớp học');
+            }
+
+            if (updatedClassroom.teacherId == student._id) {
+                throw new Error('Bạn đã tham gia lớp học');
             }
 
             updatedClassroom.listStudent.push({ _id: student._id });
@@ -377,9 +418,11 @@ class ClassroomController {
         }
     };
 
-    people = async(req, res) => {
+    people = async (req, res) => {
         try {
-            const classroom = await Classroom.findById(req.params.classroomId).select('teacherId listStudent').populate('teacherId listStudent');
+            const classroom = await Classroom.findById(req.params.classroomId)
+                .select('teacherId listStudent')
+                .populate('teacherId listStudent');
 
             res.json({ success: true, classroom });
         } catch (error) {
