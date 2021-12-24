@@ -135,15 +135,25 @@ const getIdOfTopic = (topics, topic) => {
     return topicId
 }
 
-const changeTopic = async(duplicateTopicId, topicId, topic, homeworkId, classroomId, isTheLastHomeworkOfTopic) => {
+const removeHomeworkOutOfTopic = async(duplicateTopicId, homeworkId, classroomId, isTheLastHomeworkOfTopic) => {
     if (isTheLastHomeworkOfTopic) {
         await Classroom.updateOne({ _id: classroomId }, { $pull: { topicHomework: { _id: duplicateTopicId } } })
     } else await Classroom.updateOne({ 'topicHomework._id': duplicateTopicId }, { $pull: { 'topicHomework.$.homeworks': homeworkId } })
+}
 
+const changeTopic = async(duplicateTopicId, topicId, topic, homeworkId, classroomId, isTheLastHomeworkOfTopic) => {
+    await removeHomeworkOutOfTopic(duplicateTopicId, homeworkId, classroomId, isTheLastHomeworkOfTopic)
     if (!topicId) {
         topicId = await addNewTopic(classroomId, topic);
     }
     await Classroom.updateOne({ 'topicHomework._id': topicId }, { $push: { 'topicHomework.$.homeworks': homeworkId } })
+}
+
+const getFilenameFromURL = (url) => {
+    const splited = url.split('/')
+    console.log(splited)
+    const result = splited[splited.length - 1].split('?')[0]
+    return result.replace('%20', ' ')
 }
 
 class HomeworkController {
@@ -248,7 +258,10 @@ class HomeworkController {
             if (!homework) {
                 throw new Error('Not exists');
             }
-            return res.status(200).json({ success: true, homework });
+            var filename
+            if (homework.attachedFiles.length > 0) filename = getFilenameFromURL(homework.attachedFiles[0])
+            else filename = undefined
+            return res.status(200).json({ success: true, homework, filename });
         } catch (err) {
             if (err.message == 'Not exists') {
                 return res.status(400).json({ success: false, message: 'Homework doesnt exists' });
@@ -297,6 +310,8 @@ class HomeworkController {
         } catch (err) {
             if (err.message == '2 homeworks have same title in 1 class') {
                 return res.status(400).json({ success: false, message: '1 lớp không thể có 2 bai tap cùng tên' });
+            } else if (err.message === 'No homework') {
+                return res.status(400).json({ success: true, message: 'Bài tập không tồn tại hoặc đã bị xóa' })
             } else {
                 console.log(err);
                 res.status(400).json({ success: false, message: 'ERROR' });
@@ -308,6 +323,11 @@ class HomeworkController {
         try {
             const homeworkId = req.body.homeworkId
             const file = req.file
+
+            const updatedHomework = await Homework.findOne({ _id: homeworkId })
+            if (!updatedHomework) {
+                throw new Error("No homework")
+            }
 
             const options = {
                 destination: `homework/${homeworkId}/${file.filename}`,
@@ -325,6 +345,34 @@ class HomeworkController {
         } catch (err) {
             console.log(err)
             return res.status(400).json({ success: false, message: 'ERROR' })
+        }
+    }
+
+    eraseHomework = async(req, res) => {
+        try {
+            const homeworkId = req.body.homeworkId
+            console.log(homeworkId)
+
+            const updatedHomework = await Homework.findOne({ _id: homeworkId }, "classroomId topic")
+            if (!updatedHomework) {
+                throw new Error('No document')
+            }
+            const classroomId = updatedHomework.classroomId
+            const topic = updatedHomework.topic
+            var { duplicateTopicId, topics, isTheLastHomeworkOfTopic } = await checkIfDuplicate(classroomId, topic)
+            await removeHomeworkOutOfTopic(duplicateTopicId, homeworkId, classroomId, isTheLastHomeworkOfTopic)
+            await Homework.findOneAndDelete({ _id: homeworkId })
+            await firebase.bucket.deleteFiles({
+                prefix: `homework/${homeworkId}`
+            })
+            return res.status(200).json({ success: true, message: 'Xoa thanh cong' })
+        } catch (err) {
+            if (err.message === 'No document') {
+                return res.status(400).json({ success: true, message: 'Bài tập không tồn tại hoặc đã bị xóa' })
+            } else {
+                console.log(err)
+                return res.status(400).json({ success: true, message: 'Lỗi rồi' })
+            }
         }
     }
 }

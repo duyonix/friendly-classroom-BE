@@ -24,5 +24,6 @@ router.post('/getHomeworkDetail', auth, homeworkController.getHomeworkDetail)
 router.post('/changeHomeworkDeadline', auth, homeworkController.editHomeworkDeadline)
 router.post('/changeHomework', auth, homeworkController.changeHomework)
 router.post('/changeHomeworkFile', auth, upload.single('file'), homeworkController.changeHomeworkFile)
+router.post('/eraseHomework', auth, homeworkController.eraseHomework)
 
 module.exports = router

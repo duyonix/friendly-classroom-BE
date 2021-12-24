@@ -22,5 +22,6 @@ router.post('/download', auth, upload.single('file'), documentController.downloa
 router.post('/getAllDocumentMetadataOfClass', auth, documentController.getAllDocumentMetadataOfClass)
 router.post('/changeDocument', auth, documentController.changeDocument)
 router.post('/changeDocumentFile', auth, upload.single('file'), documentController.changeDocumentFile)
+router.post('/eraseDocument', auth, documentController.eraseDocument)
 
 module.exports = router;
