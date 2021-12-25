@@ -9,6 +9,8 @@ const isUserCanSeeSubmissionMetadataOfHomework = async(userId, homeworkId) => {
             select: "teacherId"
         })
     if (userId != homework.classroomId.teacherId) {
+        console.log(userId)
+        console.log(homework.classroomId.teacherId)
         return false
     }
     return true
@@ -73,7 +75,8 @@ class SubmissionController {
                 const markDone = true;
                 const urls = await getSignedUrlSubmission(homeworkId, newFilename)
                 const attachedFiles = [urls[0]];
-                await Submission.updateOne({ homeworkId: homeworkId, studentId: studentId }, { $set: { attachedFiles: attachedFiles, markDone: markDone } });
+                const fileNames = [newFilename]
+                await Submission.updateOne({ homeworkId: homeworkId, studentId: studentId }, { $set: { attachedFiles: attachedFiles, markDone: markDone, fileNames: fileNames } });
                 return res.status(200).json({ success: true, message: 'Nộp thành công' });
             });
         } catch (err) {
@@ -97,7 +100,6 @@ class SubmissionController {
 
             // Maybe we dont need this because every student will have default submission
             const submission = await Submission.findOne({ homeworkId: homeworkId, studentId: studentId });
-            console.log(submission)
             if (!submission) {
                 throw new Error('Not submit');
             }
@@ -146,9 +148,9 @@ class SubmissionController {
             if (!isValid) {
                 throw new Error("Rights")
             }
-            const result = await Submission.find({ homeworkId: homeworkId }, 'studentId markDone score').populate({
+            const result = await Submission.find({ homeworkId: homeworkId }).populate({
                 path: 'studentId',
-                select: 'fullName username',
+                select: 'fullName username avatarUrl',
             });
             return res.status(200).json(result);
         } catch (err) {

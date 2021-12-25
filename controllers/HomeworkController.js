@@ -166,6 +166,8 @@ class HomeworkController {
             const description = req.body.description;
             const deadlineISO = req.body.deadline; // yyyy/mm/dd hh:mm:ss
 
+            console.log(description)
+
             const topic = req.body.topic;
             const attachedFiles = [];
 
@@ -280,6 +282,8 @@ class HomeworkController {
             const topic = req.body.topic
             const deadlineISO = req.body.deadline
             const deadline = changeDeadlineISOToDeadline(deadlineISO)
+
+
 
             const updatedHomework = await Homework.findOne({ _id: homeworkId })
             if (!updatedHomework) {
