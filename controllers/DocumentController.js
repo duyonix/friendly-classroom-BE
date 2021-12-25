@@ -37,14 +37,18 @@ const checkIfDuplicate = async(classroomId, topic) => {
         select: 'title',
     });
     const topics = updatedClassroom.topicDocument;
+    var isTheLastDocumentOfTopic = false
     var duplicateTopicId = null;
     for (let i = 0; i < topics.length; i++) {
         if (topics[i].topic === topic) {
             duplicateTopicId = topics[i]._id;
+            if (topics[i].documents.length == 1) {
+                isTheLastDocumentOfTopic = true
+            }
             break;
         }
     }
-    return { duplicateTopicId, topics };
+    return { duplicateTopicId, topics, isTheLastDocumentOfTopic };
 };
 
 const reverseDocumentIn1Topic = (topic) => {
@@ -73,6 +77,50 @@ const reverseTopic = (topics) => {
     }
 };
 
+const getIdOfTopic = (topics, topic) => {
+    var topicId = null;
+    for (let i = 0; i < topics.length; i++) {
+        if (topics[i].topic === topic) {
+            topicId = topics[i]._id;
+            break;
+        }
+    }
+    return topicId
+}
+
+const checkIfDuplicateTitle = (topics, title, documentId) => {
+    // check if exists another documents with same title in class
+    for (let i = 0; i < topics.length; i++) {
+        for (let j = 0; j < topics[i].documents.length; j++) {
+            if (topics[i].documents[j].title === title && topics[i].documents[j]._id != documentId) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
+const removeDocumentOutOfTopic = async(duplicateTopicId, documentId, classroomId, isTheLastDocumentOfTopic) => {
+    if (isTheLastDocumentOfTopic) {
+        await Classroom.updateOne({ _id: classroomId }, { $pull: { topicDocument: { _id: duplicateTopicId } } })
+    } else await Classroom.updateOne({ 'topicDocument._id': duplicateTopicId }, { $pull: { 'topicDocument.$.documents': documentId } })
+}
+
+const getFilenameFromURL = (url) => {
+    const splited = url.split('/')
+    console.log(splited)
+    const result = splited[splited.length - 1].split('?')[0]
+    return result.replace('%20', ' ')
+}
+
+const changeTopic = async(duplicateTopicId, topicId, topic, documentId, classroomId, isTheLastDocumentOfTopic) => {
+    await removeDocumentOutOfTopic(duplicateTopicId, documentId, classroomId, isTheLastDocumentOfTopic)
+    if (!topicId) {
+        topicId = await addNewTopic(classroomId, topic);
+    }
+    await Classroom.updateOne({ 'topicDocument._id': topicId }, { $push: { 'topicDocument.$.documents': documentId } })
+}
+
 class DocumentController {
     upload = async(req, res) => {
         try {
@@ -82,21 +130,16 @@ class DocumentController {
             const creatorId = req.userId;
             const topic = req.body.topic;
 
-            var { duplicateTopicId, topics } = await checkIfDuplicate(classroomId, topic);
+            var { duplicateTopicId, topics, isTheLastDocumentOfTopic } = await checkIfDuplicate(classroomId, topic);
+            const isTitleExist = checkIfDuplicateTitle(topics, title, null)
+            if (isTitleExist) {
+                throw new Error('2 documents have same title in 1 class')
+            }
             if (!duplicateTopicId) {
                 duplicateTopicId = await addNewTopic(classroomId, topic);
             }
 
-            const attachedFiles = [];
-
-            // check if exists another documents with same title in class
-            for (let i = 0; i < topics.length; i++) {
-                for (let j = 0; j < topics[i].documents.length; j++) {
-                    if (topics[i].documents[j].title === title) {
-                        throw new Error('2 documents have same title in 1 class');
-                    }
-                }
-            }
+            const attachedFiles = []
 
             const file = req.file;
 
@@ -139,8 +182,10 @@ class DocumentController {
                     if (!document) {
                         throw new Error('Document doesnt exist');
                     }
-
-                    return res.status(200).json({ success: true, document });
+                    var filename
+                    if (document.attachedFiles.length > 0) filename = getFilenameFromURL(document.attachedFiles[0])
+                    else filename = undefined
+                    return res.status(200).json({ success: true, document, filename });
                 } catch (err) {
                     if (err.message == 'Document doesnt exist') return res.status(400).json({ success: false, message: 'Document doesnt exist' });
                     else {
@@ -162,9 +207,117 @@ class DocumentController {
             select: 'title createdAt',
         });
         const topics = topicDocument.topicDocument;
+        if (topics.length === 0) {
+            return res.status(200).json(topics);
+        }
         reverseTopic(topics);
         return res.status(200).json(topics);
     };
+
+    changeDocument = async(req, res) => {
+        try {
+            const documentId = req.body.documentId
+            const title = req.body.title
+            const description = req.body.description
+            const topic = req.body.topic
+
+            const updatedDocument = await Document.findOne({ _id: documentId })
+            if (!updatedDocument) {
+                throw new Error("No document")
+            }
+
+            const classId = updatedDocument.classroomId
+            const oldTopic = updatedDocument.topic
+
+            var { duplicateTopicId, topics, isTheLastDocumentOfTopic } = await checkIfDuplicate(classId, oldTopic)
+            const isTitleExist = checkIfDuplicateTitle(topics, title, documentId)
+            if (isTitleExist) {
+                throw new Error('2 documents have same title in 1 class')
+            }
+
+            // consider to erase this block of code
+            if (!duplicateTopicId) {
+                throw new Error('ERROR')
+            }
+
+            var topicId = getIdOfTopic(topics, topic)
+
+            if (oldTopic != topic) {
+                await changeTopic(duplicateTopicId, topicId, topic, documentId, classId, isTheLastDocumentOfTopic)
+            }
+
+            await Document.findOneAndUpdate({ _id: documentId }, { $set: { title: title, description: description, topic: topic } })
+            return res.status(200).json({ success: true, message: "Change document successfully" })
+        } catch (err) {
+            if (err.message == '2 documents have same title in 1 class') {
+                return res.status(400).json({ success: false, message: '1 lớp không thể có 2 tài liệu cùng tên' });
+            } else if (err.message === "No document") {
+                return res.status(400).json({ success: false, message: 'Tài liệu không tồn tại hoặc đã bị xóa' })
+            } else {
+                console.log(err);
+                res.status(400).json({ success: false, message: 'ERROR' });
+            }
+        }
+    }
+    changeDocumentFile = async(req, res) => {
+        try {
+            const documentId = req.body.documentId
+            const file = req.file
+
+            const updatedDocument = await Document.findOne({ _id: documentId })
+            if (!updatedDocument) {
+                throw new Error("No document")
+            }
+
+            const options = {
+                destination: `document/${documentId}/${file.filename}`,
+            };
+
+            await firebase.bucket.deleteFiles({
+                prefix: `document/${documentId}`
+            })
+
+            await firebase.bucket.upload(file.path, options)
+            const urls = await getSignedUrlDocument(documentId, file.filename)
+
+            await Document.updateOne({ _id: documentId }, { $set: { attachedFiles: urls } })
+            return res.status(200).json({ success: true, message: 'Thay đổi file cho tài liệu thành công' })
+        } catch (err) {
+            if (err.message === "No document") {
+                return res.status(400).json({ success: false, message: 'Tài liệu không tồn tại hoặc đã bị xóa' })
+            } else {
+                console.log(err)
+                return res.status(400).json({ success: false, message: 'ERROR' })
+            }
+        }
+    }
+
+    eraseDocument = async(req, res) => {
+        try {
+            const documentId = req.body.documentId
+
+            const updatedDocument = await Document.findOne({ _id: documentId }, "classroomId topic")
+            if (!updatedDocument) {
+                throw new Error('No document')
+            }
+            const classroomId = updatedDocument.classroomId
+            const topic = updatedDocument.topic
+            var { duplicateTopicId, topics, isTheLastDocumentOfTopic } = await checkIfDuplicate(classroomId, topic)
+            await removeDocumentOutOfTopic(duplicateTopicId, documentId, classroomId, isTheLastDocumentOfTopic)
+            await Document.findOneAndDelete({ _id: documentId })
+            await firebase.bucket.deleteFiles({
+                prefix: `document/${documentId}`
+            })
+            return res.status(200).json({ success: true, message: 'Xoa thanh cong' })
+        } catch (err) {
+            if (err.message === 'No document') {
+                return res.status(400).json({ success: true, message: 'Tài liệu không tồn tại hoặc đã bị xóa' })
+            } else {
+                console.log(err)
+                return res.status(400).json({ success: true, message: 'Lỗi rồi' })
+            }
+        }
+    }
 }
 
 module.exports = new DocumentController();
