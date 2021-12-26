@@ -29,6 +29,14 @@ const isUserCanAddScoreToSubmission = async(userId, homeworkId, studentId) => {
     return true
 }
 
+const checkIfUserSubmitted = async(homeworkId, studentId) => {
+    const submission = await Submission.findOne({ homeworkId: homeworkId, studentId: studentId, markDone: true })
+    if (!submission) {
+        return false
+    }
+    return true
+}
+
 const isUserCanSeeSubmission = async(userId, homeworkId, studentId) => {
     if (userId === studentId) return true
     const homework = await Homework.findOne({ _id: homeworkId }, "classroomId")
@@ -43,8 +51,8 @@ const isUserCanSeeSubmission = async(userId, homeworkId, studentId) => {
     return true
 }
 
-getSignedUrlSubmission = async(homeworkId, filename) => {
-    const destinationFirebase = `submission/${homeworkId}/${filename}`;
+getSignedUrlSubmission = async(homeworkId, studentId, filename) => {
+    const destinationFirebase = `submission/${homeworkId}/${studentId}/${filename}`;
     const config = {
         action: 'read',
         expires: '08-08-2025',
@@ -64,24 +72,26 @@ class SubmissionController {
                 throw new Error('Not submission');
             }
 
-            // newFilename = {studentId}.{extension of file}
-            const newFilename = `${studentId}.${file.filename.split('.')[1]}`;
+
             var optionsFirebase = {
-                destination: `submission/${homeworkId}/${newFilename}`,
+                destination: `submission/${homeworkId}/${studentId}/${file.filename}`,
             };
 
             // Only update default submission, not create new submission
             firebase.bucket.upload(file.path, optionsFirebase, async function(err, item) {
                 const markDone = true;
-                const urls = await getSignedUrlSubmission(homeworkId, newFilename)
+                const urls = await getSignedUrlSubmission(homeworkId, studentId, file.filename)
                 const attachedFiles = [urls[0]];
-                const fileNames = [newFilename]
+                const fileNames = [file.filename]
                 await Submission.updateOne({ homeworkId: homeworkId, studentId: studentId }, { $set: { attachedFiles: attachedFiles, markDone: markDone, fileNames: fileNames } });
                 return res.status(200).json({ success: true, message: 'Nộp thành công' });
             });
         } catch (err) {
             if (err.message == 'Not submission') {
                 return res.status(400).json({ success: false, message: 'File bài làm của bạn đâu :(' });
+            } else {
+                console.log(err)
+                return res.status(400).json({ success: false, message: 'ERROR' })
             }
         }
     };
@@ -161,6 +171,29 @@ class SubmissionController {
             }
         }
     };
+
+    deleteSubmission = async(req, res) => {
+        try {
+            const studentId = req.userId
+            const homeworkId = req.body.homeworkId
+
+            const isOK = await checkIfUserSubmitted(homeworkId, studentId)
+            if (!isOK) throw new Error('not submit')
+
+            await Submission.findOneAndUpdate({ studentId: studentId, homeworkId: homeworkId }, { $set: { markDone: false, attachedFiles: [], fileNames: [], comment: undefined, score: undefined } })
+            await firebase.bucket.deleteFiles({
+                prefix: `/submission/${homeworkId}/${studentId}`
+            })
+            return res.status(200).json({ success: true, message: 'Đã xóa bài làm của bạn cho bài tập này' })
+        } catch (err) {
+            if (err.message == 'not submit') {
+                return res.status(400).json({ success: false, message: 'Chưa nộp sao xóa ?' })
+            } else {
+                console.log(err)
+                return res.status(400).json({ success: false, message: 'Lỗi rồi :(' })
+            }
+        }
+    }
 }
 
 module.exports = new SubmissionController();
