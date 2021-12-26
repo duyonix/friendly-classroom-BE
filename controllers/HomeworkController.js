@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const Classroom = require('../models/Classroom');
 const Submission = require('../models/Submission');
 
-saveHomeworkToMongodb = async(_id, classroomId, title, creatorId, description, deadline, attachedFiles, topic, duplicateTopicId) => {
+saveHomeworkToMongodb = async (_id, classroomId, title, creatorId, description, deadline, attachedFiles, topic, duplicateTopicId) => {
     const newHomework = new Homework({ _id, classroomId, title, creatorId, description, deadline, attachedFiles, topic });
     await newHomework.save();
     createFakeSubmissionForEveryMemberInClass(classroomId, _id);
@@ -14,7 +14,7 @@ saveHomeworkToMongodb = async(_id, classroomId, title, creatorId, description, d
     await Classroom.updateOne({ 'topicHomework._id': duplicateTopicId }, { $push: { 'topicHomework.$.homeworks': _id } });
 };
 
-createFakeSubmissionForEveryMemberInClass = async(classroomId, homeworkId) => {
+createFakeSubmissionForEveryMemberInClass = async (classroomId, homeworkId) => {
     // When teacher create homework, every student in class have default submission
     const classMember = await Classroom.findOne({ _id: classroomId }, 'listStudent');
     const markDone = false;
@@ -25,7 +25,7 @@ createFakeSubmissionForEveryMemberInClass = async(classroomId, homeworkId) => {
     });
 };
 
-getSignedUrlHomework = async(homeworkId, filename) => {
+getSignedUrlHomework = async (homeworkId, filename) => {
     const destinationFirebase = `homework/${homeworkId}/${filename}`;
     const config = {
         action: 'read',
@@ -65,13 +65,13 @@ const reverseTopic = (topics) => {
     }
 };
 
-const addNewTopic = async(classroomId, topic) => {
+const addNewTopic = async (classroomId, topic) => {
     var myId = mongoose.Types.ObjectId();
     await Classroom.updateOne({ _id: classroomId }, { $push: { topicHomework: { _id: myId, topic: topic, homeworks: [] } } });
     return myId;
 };
 
-const checkIfDuplicate = async(classroomId, topic) => {
+const checkIfDuplicate = async (classroomId, topic) => {
     /* check if we have same topic in class
      * return id of topic if yes, otherwise is null
      * return array of topics can be used for check if we have homework with same title in class
@@ -95,7 +95,7 @@ const checkIfDuplicate = async(classroomId, topic) => {
     return { duplicateTopicId, topics, isTheLastHomeworkOfTopic };
 };
 
-Number.prototype.padLeft = function(base, chr) {
+Number.prototype.padLeft = function (base, chr) {
     var len = (String(base || 10).length - String(this).length) + 1;
     return len > 0 ? new Array(len).join(chr || '0') + this : this;
 }
@@ -103,11 +103,11 @@ Number.prototype.padLeft = function(base, chr) {
 const changeDeadlineISOToDeadline = (deadlineISO) => {
     const d = new Date(deadlineISO)
     const deadline = [(d.getMonth() + 1).padLeft(),
-        d.getDate().padLeft(),
-        d.getFullYear()
+    d.getDate().padLeft(),
+    d.getFullYear()
     ].join('/') + ' ' + [d.getHours().padLeft(),
-        d.getMinutes().padLeft(),
-        d.getSeconds().padLeft()
+    d.getMinutes().padLeft(),
+    d.getSeconds().padLeft()
     ].join(':');
     return deadline
 }
@@ -135,13 +135,13 @@ const getIdOfTopic = (topics, topic) => {
     return topicId
 }
 
-const removeHomeworkOutOfTopic = async(duplicateTopicId, homeworkId, classroomId, isTheLastHomeworkOfTopic) => {
+const removeHomeworkOutOfTopic = async (duplicateTopicId, homeworkId, classroomId, isTheLastHomeworkOfTopic) => {
     if (isTheLastHomeworkOfTopic) {
         await Classroom.updateOne({ _id: classroomId }, { $pull: { topicHomework: { _id: duplicateTopicId } } })
     } else await Classroom.updateOne({ 'topicHomework._id': duplicateTopicId }, { $pull: { 'topicHomework.$.homeworks': homeworkId } })
 }
 
-const changeTopic = async(duplicateTopicId, topicId, topic, homeworkId, classroomId, isTheLastHomeworkOfTopic) => {
+const changeTopic = async (duplicateTopicId, topicId, topic, homeworkId, classroomId, isTheLastHomeworkOfTopic) => {
     await removeHomeworkOutOfTopic(duplicateTopicId, homeworkId, classroomId, isTheLastHomeworkOfTopic)
     if (!topicId) {
         topicId = await addNewTopic(classroomId, topic);
@@ -157,7 +157,7 @@ const getFilenameFromURL = (url) => {
 }
 
 class HomeworkController {
-    createHomework = async(req, res) => {
+    createHomework = async (req, res) => {
         try {
             const file = req.file;
             const creatorId = req.userId;
@@ -178,6 +178,7 @@ class HomeworkController {
                 throw new Error('Rights')
             }
             */
+            // console.log("description: ", description);
 
             var { duplicateTopicId, topics, isTheLastHomeworkOfTopic } = await checkIfDuplicate(classroomId, topic);
             if (!duplicateTopicId) {
@@ -221,8 +222,8 @@ class HomeworkController {
             }
         }
     };
-    removeHomework = (req, res) => {};
-    editHomeworkDeadline = async(req, res) => {
+    removeHomework = (req, res) => { };
+    editHomeworkDeadline = async (req, res) => {
         try {
             const classroomId = req.body.classroomId;
             const title = req.body.title;
@@ -234,7 +235,7 @@ class HomeworkController {
             return res.status(400).json({ success: false, message: 'Error in changing deadline' });
         }
     };
-    getAllHomeworkMetadataOfClass = async(req, res) => {
+    getAllHomeworkMetadataOfClass = async (req, res) => {
         // return title and deadline of all homework in 1 class
         const classroomId = req.body.classroomId;
         const topicHomework = await Classroom.findOne({ _id: classroomId }, 'topicHomework').populate({
@@ -250,7 +251,7 @@ class HomeworkController {
         return res.status(200).json(topics);
     };
 
-    getHomeworkDetail = async(req, res) => {
+    getHomeworkDetail = async (req, res) => {
         // get all information about homework
         try {
             const homeworkId = req.body.homeworkId;
@@ -272,7 +273,7 @@ class HomeworkController {
         }
     };
 
-    changeHomework = async(req, res) => {
+    changeHomework = async (req, res) => {
         try {
             const homeworkId = req.body.homeworkId
             const title = req.body.title
@@ -319,7 +320,7 @@ class HomeworkController {
         }
     }
 
-    changeHomeworkFile = async(req, res) => {
+    changeHomeworkFile = async (req, res) => {
         try {
             const homeworkId = req.body.homeworkId
             const file = req.file
@@ -348,7 +349,7 @@ class HomeworkController {
         }
     }
 
-    eraseHomework = async(req, res) => {
+    eraseHomework = async (req, res) => {
         try {
             const homeworkId = req.body.homeworkId
             console.log(homeworkId)
