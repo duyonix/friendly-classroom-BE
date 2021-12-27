@@ -5,8 +5,13 @@ const mongoose = require('mongoose');
 const Classroom = require('../models/Classroom');
 const Submission = require('../models/Submission');
 
+<<<<<<< HEAD
 saveHomeworkToMongodb = async (_id, classroomId, title, creatorId, description, deadline, attachedFiles, topic, duplicateTopicId) => {
     const newHomework = new Homework({ _id, classroomId, title, creatorId, description, deadline, attachedFiles, topic });
+=======
+saveHomeworkToMongodb = async(_id, classroomId, title, creatorId, description, deadline, attachedFiles, fileAttributes, topic, duplicateTopicId) => {
+    const newHomework = new Homework({ _id, classroomId, title, creatorId, description, deadline, attachedFiles, fileAttributes, topic });
+>>>>>>> 03921c7811a579e0fdb12d7256252691d08b16e4
     await newHomework.save();
     createFakeSubmissionForEveryMemberInClass(classroomId, _id);
 
@@ -156,6 +161,24 @@ const getFilenameFromURL = (url) => {
     return result.replace('%20', ' ')
 }
 
+convertSizeToProperUnit = (bytes) => {
+    var i = 0
+    while (bytes >= 1024) {
+        i++
+        bytes = bytes / 1024
+    }
+    bytes = Math.round(bytes * 100) / 100
+    return `${bytes} ${unitTable[i]}`
+}
+
+getFileExtension = (filename) => {
+    var i = filename.length - 1
+    while (filename[i] != '.') {
+        i = i - 1
+    }
+    return filename.substring(i + 1)
+}
+
 class HomeworkController {
     createHomework = async (req, res) => {
         try {
@@ -166,10 +189,9 @@ class HomeworkController {
             const description = req.body.description;
             const deadlineISO = req.body.deadline; // yyyy/mm/dd hh:mm:ss
 
-            console.log(description)
-
             const topic = req.body.topic;
             const attachedFiles = [];
+            const fileAttributes = []
 
             const deadline = changeDeadlineISOToDeadline(deadlineISO)
 
@@ -199,19 +221,28 @@ class HomeworkController {
 
             // If dont have file, save right now
             if (!file) {
-                await saveHomeworkToMongodb(_id, classroomId, title, creatorId, description, deadline, attachedFiles, topic, duplicateTopicId);
+                await saveHomeworkToMongodb(_id, classroomId, title, creatorId, description, deadline, attachedFiles, fileAttributes, topic, duplicateTopicId);
                 return res.status(200).json({ success: true, message: 'Homework is added' });
             }
 
             // If have file, save file first and save in mongodb later
             // place I save file homework on Firebase
+
             const options = {
                 destination: `homework/${_id}/${file.filename}`,
             };
             await firebase.bucket.upload(file.path, options);
             const url = await getSignedUrlHomework(_id, file.filename);
             attachedFiles.push(url[0]);
-            await saveHomeworkToMongodb(_id, classroomId, title, creatorId, description, deadline, attachedFiles, topic, duplicateTopicId);
+            const size = convertSizeToProperUnit(file.size)
+            const extension = getFileExtension(file.filename)
+            const fileAttribute = {
+                name: file.filename,
+                size: size,
+                extension: extension
+            }
+            fileAttributes.push(fileAttribute)
+            await saveHomeworkToMongodb(_id, classroomId, title, creatorId, description, deadline, attachedFiles, fileAttributes, topic, duplicateTopicId);
             return res.status(200).json({ success: true, message: 'Bài tập đã thêm thành công', id: _id });
         } catch (err) {
             if (err.message == 'Rights') {
@@ -242,7 +273,7 @@ class HomeworkController {
         const classroomId = req.body.classroomId;
         const topicHomework = await Classroom.findOne({ _id: classroomId }, 'topicHomework').populate({
             path: 'topicHomework.homeworks',
-            select: 'title deadline',
+            select: 'title deadline fileAttributes',
         });
         const topics = topicHomework.topicHomework;
         if (topics.length === 0) {
@@ -338,7 +369,7 @@ class HomeworkController {
             })
 
             if (!file) {
-                await Homework.updateOne({ _id: homeworkId }, { $set: { attachedFiles: [] } })
+                await Homework.updateOne({ _id: homeworkId }, { $set: { attachedFiles: [], fileAttributes: [] } })
                 return res.status(200).json({ success: true, message: 'Đã xóa file cho bài tập này' })
             }
 
@@ -348,8 +379,15 @@ class HomeworkController {
 
             await firebase.bucket.upload(file.path, options)
             const urls = await getSignedUrlHomework(homeworkId, file.filename)
-
-            await Homework.updateOne({ _id: homeworkId }, { $set: { attachedFiles: urls } })
+            const size = convertSizeToProperUnit(file.size)
+            const extension = getFileExtension(file.filename)
+            const fileAttribute = {
+                name: file.filename,
+                size: size,
+                extension: extension
+            }
+            const fileAttributes = [fileAttribute]
+            await Homework.updateOne({ _id: homeworkId }, { $set: { attachedFiles: urls, fileAttributes: fileAttributes } })
             return res.status(200).json({ success: true, message: 'Thay đổi file cho bài tập thành công' })
         } catch (err) {
             console.log(err)

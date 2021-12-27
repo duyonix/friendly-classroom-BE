@@ -2,9 +2,10 @@ const firebase = require('../firebase');
 const Document = require('../models/Document');
 const Classroom = require('../models/Classroom');
 const mongoose = require('mongoose');
+const unitTable = ['B', 'KB', 'MB', 'GB', 'TB']
 
-const saveDocumentToMongoDB = async (_id, classroomId, title, description, creatorId, attachedFiles, topic, duplicateTopicId) => {
-    const newDocument = new Document({ _id, classroomId, title, description, creatorId, attachedFiles, topic });
+const saveDocumentToMongoDB = async (_id, classroomId, title, description, creatorId, attachedFiles, fileAttributes, topic, duplicateTopicId) => {
+    const newDocument = new Document({ _id, classroomId, title, description, creatorId, attachedFiles, fileAttributes, topic });
     await newDocument.save();
 
     // push new document to list document of class
@@ -121,6 +122,24 @@ const changeTopic = async (duplicateTopicId, topicId, topic, documentId, classro
     await Classroom.updateOne({ 'topicDocument._id': topicId }, { $push: { 'topicDocument.$.documents': documentId } })
 }
 
+convertSizeToProperUnit = (bytes) => {
+    var i = 0
+    while (bytes >= 1024) {
+        i++
+        bytes = bytes / 1024
+    }
+    bytes = Math.round(bytes * 100) / 100
+    return `${bytes} ${unitTable[i]}`
+}
+
+getFileExtension = (filename) => {
+    var i = filename.length - 1
+    while (filename[i] != '.') {
+        i = i - 1
+    }
+    return filename.substring(i + 1)
+}
+
 class DocumentController {
     upload = async (req, res) => {
         try {
@@ -142,16 +161,25 @@ class DocumentController {
             }
 
             const attachedFiles = []
+            const fileAttributes = []
 
             const file = req.file;
 
             // if dont have file, save right now
             if (!file) {
-                await saveDocumentToMongoDB(classroomId, title, description, creatorId, attachedFiles, topic, duplicateTopicId);
+                await saveDocumentToMongoDB(classroomId, title, description, creatorId, attachedFiles, fileAttributes, topic, duplicateTopicId);
                 return res.status(200).json({ success: true, message: 'Uploaded' });
             }
 
             // otherwise
+            const size = convertSizeToProperUnit(file.size)
+            const extension = getFileExtension(file.filename)
+            const fileAttribute = {
+                name: file.filename,
+                size: size,
+                extension: extension
+            }
+            fileAttributes.push(fileAttribute)
             var _id = mongoose.Types.ObjectId();
             var options = {
                 destination: `document/${_id}/${file.filename}`,
@@ -160,7 +188,7 @@ class DocumentController {
 
             const url = await getSignedUrlDocument(_id, file.filename);
             attachedFiles.push(url[0]);
-            await saveDocumentToMongoDB(_id, classroomId, title, description, creatorId, attachedFiles, topic, duplicateTopicId);
+            await saveDocumentToMongoDB(_id, classroomId, title, description, creatorId, attachedFiles, fileAttribute, topic, duplicateTopicId);
             return res.status(200).json({ success: true, message: 'Đã tải lên tài liệu thành công' });
         } catch (err) {
             if (err.message == '2 documents have same title in 1 class') {
@@ -206,7 +234,7 @@ class DocumentController {
         const classroomId = req.body.classroomId;
         const topicDocument = await Classroom.findOne({ _id: classroomId }, 'topicDocument').populate({
             path: 'topicDocument.documents',
-            select: 'title createdAt',
+            select: 'title createdAt fileAttributes',
         });
         const topics = topicDocument.topicDocument;
         if (topics.length === 0) {
@@ -271,22 +299,36 @@ class DocumentController {
                 throw new Error("No document")
             }
 
-            const options = {
-                destination: `document/${documentId}/${file.filename}`,
-            };
+            if (!file) {
+                throw new Error('No file')
+            }
 
             await firebase.bucket.deleteFiles({
                 prefix: `document/${documentId}`
             })
 
+            const options = {
+                destination: `document/${documentId}/${file.filename}`,
+            };
+
             await firebase.bucket.upload(file.path, options)
             const urls = await getSignedUrlDocument(documentId, file.filename)
+            const size = convertSizeToProperUnit(file.size)
+            const extension = getFileExtension(file.filename)
+            const fileAttribute = {
+                name: file.filename,
+                size: size,
+                extension: extension
+            }
+            const fileAttributes = [fileAttribute]
 
-            await Document.updateOne({ _id: documentId }, { $set: { attachedFiles: urls } })
+            await Document.updateOne({ _id: documentId }, { $set: { attachedFiles: urls, fileAttributes: fileAttributes } })
             return res.status(200).json({ success: true, message: 'Thay đổi file cho tài liệu thành công' })
         } catch (err) {
             if (err.message === "No document") {
                 return res.status(400).json({ success: false, message: 'Tài liệu không tồn tại hoặc đã bị xóa' })
+            } else if (err.message === 'No file') {
+                return res.status(400).json({ success: true, message: 'Bạn không gửi file nào cả' })
             } else {
                 console.log(err)
                 return res.status(400).json({ success: false, message: 'ERROR' })

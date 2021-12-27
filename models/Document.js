@@ -21,6 +21,17 @@ const Document = new mongoose.Schema({
     attachedFiles: [{
         type: String,
     }, ],
+    fileAttributes: [{
+        name: {
+            type: String,
+        },
+        size: {
+            type: String,
+        },
+        extension: {
+            type: String,
+        }
+    }],
     topic: {
         type: String,
     },
