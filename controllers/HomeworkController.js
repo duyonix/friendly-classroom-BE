@@ -332,14 +332,18 @@ class HomeworkController {
             if (!updatedHomework) {
                 throw new Error("No homework")
             }
+            await firebase.bucket.deleteFiles({
+                prefix: `homework/${homeworkId}`
+            })
+
+            if (!file) {
+                await Homework.updateOne({ _id: homeworkId }, { $set: { attachedFiles: [] } })
+                return res.status(200).json({ success: true, message: 'Đã xóa file cho bài tập này' })
+            }
 
             const options = {
                 destination: `homework/${homeworkId}/${file.filename}`,
             };
-
-            await firebase.bucket.deleteFiles({
-                prefix: `homework/${homeworkId}`
-            })
 
             await firebase.bucket.upload(file.path, options)
             const urls = await getSignedUrlHomework(homeworkId, file.filename)
@@ -369,7 +373,7 @@ class HomeworkController {
             await firebase.bucket.deleteFiles({
                 prefix: `homework/${homeworkId}`
             })
-            return res.status(200).json({ success: true, message: 'Xoa thanh cong' })
+            return res.status(200).json({ success: true, message: 'Xóa thành công' })
         } catch (err) {
             if (err.message === 'No document') {
                 return res.status(400).json({ success: true, message: 'Bài tập không tồn tại hoặc đã bị xóa' })

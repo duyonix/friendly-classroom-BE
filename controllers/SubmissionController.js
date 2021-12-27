@@ -1,6 +1,7 @@
 const Submission = require('../models/Submission');
 const firebase = require('../firebase');
 const Homework = require('../models/Homework');
+const unitTable = ['B', 'KB', 'MB', 'GB', 'TB']
 
 const isUserCanSeeSubmissionMetadataOfHomework = async(userId, homeworkId) => {
     const homework = await Homework.findOne({ _id: homeworkId }, "classroomId")
@@ -61,6 +62,24 @@ getSignedUrlSubmission = async(homeworkId, studentId, filename) => {
     return url;
 };
 
+convertSizeToProperUnit = (bytes) => {
+    var i = 0
+    while (bytes >= 1024) {
+        i++
+        bytes = bytes / 1024
+    }
+    bytes = Math.round(bytes * 100) / 100
+    return `${bytes} ${unitTable[i]}`
+}
+
+getFileExtension = (filename) => {
+    var i = filename.length - 1
+    while (filename[i] != '.') {
+        i = i - 1
+    }
+    return filename.substring(i + 1)
+}
+
 class SubmissionController {
     submitSubmission = (req, res) => {
         try {
@@ -72,6 +91,17 @@ class SubmissionController {
                 throw new Error('Not submission');
             }
 
+            console.log(file)
+            const size = convertSizeToProperUnit(file.size)
+            const extension = getFileExtension(file.filename)
+            const fileAttribute = {
+                name: file.filename,
+                size: size,
+                extension: extension
+            }
+            console.log(fileAttribute)
+            const lastModified = new Date()
+            console.log(lastModified)
 
             var optionsFirebase = {
                 destination: `submission/${homeworkId}/${studentId}/${file.filename}`,
@@ -82,8 +112,8 @@ class SubmissionController {
                 const markDone = true;
                 const urls = await getSignedUrlSubmission(homeworkId, studentId, file.filename)
                 const attachedFiles = [urls[0]];
-                const fileNames = [file.filename]
-                await Submission.updateOne({ homeworkId: homeworkId, studentId: studentId }, { $set: { attachedFiles: attachedFiles, markDone: markDone, fileNames: fileNames } });
+                const fileAttributes = [fileAttribute]
+                await Submission.updateOne({ homeworkId: homeworkId, studentId: studentId }, { $set: { attachedFiles: attachedFiles, markDone: markDone, fileAttributes: fileAttributes, lastModified: lastModified } });
                 return res.status(200).json({ success: true, message: 'Nộp thành công' });
             });
         } catch (err) {
@@ -180,7 +210,21 @@ class SubmissionController {
             const isOK = await checkIfUserSubmitted(homeworkId, studentId)
             if (!isOK) throw new Error('not submit')
 
-            await Submission.findOneAndUpdate({ studentId: studentId, homeworkId: homeworkId }, { $set: { markDone: false, attachedFiles: [], fileNames: [], comment: undefined, score: undefined } })
+            const lastModified = new Date()
+                // await Submission.findOneAndUpdate({ studentId: studentId, homeworkId: homeworkId }, { $set: { markDone: false, attachedFiles: [], fileAttributes: [], comment: undefined, score: undefined, lastModified: lastModified } })
+            const updatedSubmission = await Submission.findOne({ studentId: studentId, homeworkId: homeworkId })
+            if (updatedSubmission.score) {
+                updatedSubmission.score = undefined
+            }
+            if (updatedSubmission.comment) {
+                updatedSubmission.comment = undefined
+            }
+            updatedSubmission.markDone = false
+            updatedSubmission.attachedFiles = undefined
+            updatedSubmission.fileAttributes = undefined
+            updatedSubmission.lastModified = lastModified
+
+            await updatedSubmission.save()
             await firebase.bucket.deleteFiles({
                 prefix: `/submission/${homeworkId}/${studentId}`
             })
