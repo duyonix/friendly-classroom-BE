@@ -15,12 +15,23 @@ const Submission = new Schema({
         type: Boolean,
         default: false,
     },
-    fileNames: [{
-        type: String,
+    fileAttributes: [{
+        name: {
+            type: String
+        },
+        size: {
+            type: String,
+        },
+        extension: {
+            type: String,
+        }
     }],
     attachedFiles: [{
         type: String,
     }, ],
+    lastModified: {
+        type: Date,
+    },
     comment: {
         type: String,
     },

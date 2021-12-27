@@ -20,5 +20,6 @@ router.post('/submitSubmission', auth, upload.single('file'), submissionControll
 router.post('/getSubmission', auth, submissionController.getSubmission)
 router.post('/addCommentAndScore', auth, submissionController.addCommentAndScore)
 router.post('/getAllSubmissionMetadataOfHomework', auth, submissionController.getAllSubmissionMetadataOfHomework)
+router.post('/deleteSubmission', auth, submissionController.deleteSubmission)
 
 module.exports = router
