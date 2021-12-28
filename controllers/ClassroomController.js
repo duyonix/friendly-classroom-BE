@@ -312,7 +312,7 @@ class ClassroomController {
             });
         }
     };
-    leaveClassroom = async(req, res) => {
+    leaveClassroom = async (req, res) => {
         try {
             let updatedClassroom = await Classroom.findOne({
                 _id: req.params.classroomId,

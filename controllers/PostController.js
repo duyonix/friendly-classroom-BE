@@ -14,10 +14,10 @@ class PostController {
                 .populate({
                     path: 'listPost',
                     populate: [
-                        { path: 'postedBy', select: 'username' },
+                        { path: 'postedBy', select: 'username avatarUrl' },
                         {
                             path: 'listComment',
-                            populate: [{ path: 'commentedBy', select: 'username' }],
+                            populate: [{ path: 'commentedBy', select: 'username avatarUrl' }],
                             options: {
                                 sort: { createdAt: -1 },
                             },
@@ -43,7 +43,7 @@ class PostController {
                 .sort('-createdAt')
                 .populate({
                     path: 'listComment',
-                    populate: [{ path: 'commentedBy', select: 'username' }],
+                    populate: [{ path: 'commentedBy', select: 'username avatarUrl' }],
                     options: {
                         sort: { createdAt: -1 },
                     },
