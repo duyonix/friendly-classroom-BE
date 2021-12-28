@@ -5,13 +5,8 @@ const mongoose = require('mongoose');
 const Classroom = require('../models/Classroom');
 const Submission = require('../models/Submission');
 
-<<<<<<< HEAD
-saveHomeworkToMongodb = async (_id, classroomId, title, creatorId, description, deadline, attachedFiles, topic, duplicateTopicId) => {
-    const newHomework = new Homework({ _id, classroomId, title, creatorId, description, deadline, attachedFiles, topic });
-=======
-saveHomeworkToMongodb = async(_id, classroomId, title, creatorId, description, deadline, attachedFiles, fileAttributes, topic, duplicateTopicId) => {
+saveHomeworkToMongodb = async (_id, classroomId, title, creatorId, description, deadline, attachedFiles, fileAttributes, topic, duplicateTopicId) => {
     const newHomework = new Homework({ _id, classroomId, title, creatorId, description, deadline, attachedFiles, fileAttributes, topic });
->>>>>>> 03921c7811a579e0fdb12d7256252691d08b16e4
     await newHomework.save();
     createFakeSubmissionForEveryMemberInClass(classroomId, _id);
 
