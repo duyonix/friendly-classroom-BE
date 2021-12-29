@@ -225,6 +225,25 @@ class UserController {
             }
         }
     }
+    getAllScoreOf1User = async(req, res) => {
+        try {
+            const classroomId = req.body.classroomId
+            const userId = req.userId
+
+            const result = await Submission.find({ studentId: userId, score: { $exists: true, $ne: null } }, "homeworkId score")
+                .populate({
+                    path: 'homeworkId',
+                    select: 'title',
+                    match: {
+                        classroomId: classroomId
+                    }
+                })
+            return res.status(200).json({ success: true, result })
+        } catch (err) {
+            console.log(err)
+            return res.status(400).json({ success: false, message: 'Error' })
+        }
+    }
 }
 
 module.exports = new UserController();
