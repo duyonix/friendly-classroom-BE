@@ -22,5 +22,6 @@ router.post('/changeAvatar', auth, upload.single('avatar'), userController.chang
 router.get('/calendar', auth, userController.calendar);
 router.get('/todo', auth, userController.todo);
 router.post('/changeInformation', auth, userController.changeInformation)
+router.post('/getAllScore', auth, userController.getAllScoreOf1User)
 
 module.exports = router;

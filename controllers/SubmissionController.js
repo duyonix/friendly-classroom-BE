@@ -2,6 +2,7 @@ const Submission = require('../models/Submission');
 const firebase = require('../firebase');
 const Homework = require('../models/Homework');
 const unitTable = ['B', 'KB', 'MB', 'GB', 'TB']
+const Classroom = require('../models/Classroom')
 
 const isUserCanSeeSubmissionMetadataOfHomework = async(userId, homeworkId) => {
     const homework = await Homework.findOne({ _id: homeworkId }, "classroomId")
@@ -78,6 +79,79 @@ getFileExtension = (filename) => {
         i = i - 1
     }
     return filename.substring(i + 1)
+}
+
+getArrayOfHomework = (topicHomework) => {
+    var res = []
+    const n = topicHomework.length
+    for (let i = 0; i < n; i++) {
+        res = res.concat(topicHomework[i].homeworks)
+    }
+    return res
+}
+
+findHomework = (temp, homeworkId) => {
+    var left = 0
+    var right = temp.length - 1
+    while (left <= right) {
+        var mid = Math.round((left + right) / 2)
+        if (temp[mid].homeworkId < homeworkId) {
+            left = mid + 1
+        } else if (temp[mid].homeworkId > homeworkId) {
+            right = mid - 1
+        } else return mid
+    }
+    return null
+}
+
+createArrayResults = (arrayHomeworks, listStudent, submissions) => {
+    var res = []
+    const nStudent = listStudent.length
+    const nHomework = arrayHomeworks.length
+    for (let i = 0; i < nStudent; i++) {
+        const student = {
+            fullName: listStudent[i].fullName,
+            studentId: listStudent[i]._id
+        }
+        student.scores = Array.from({ length: nHomework }, (_, i) => null)
+        res.push(student)
+    }
+    res = res.sort((a, b) => {
+        return a.studentId < b.studentId ? -1 : 1
+    })
+    submissions.sort((a, b) => {
+        if (a.studentId != b.studentId) {
+            return a.studentId < b.studentId ? -1 : 1
+        } else {
+            return a.homeworkId < b.homeworkId ? -1 : 1
+        }
+    })
+    var temp = []
+    for (let i = 0; i < nHomework; i++) {
+        const obj = {
+            homeworkId: arrayHomeworks[i]._id,
+            ith: i
+        }
+        temp.push(obj)
+    }
+    temp = temp.sort((a, b) => {
+        if (a.homeworkId < b.homeworkId) return -1;
+        else return 1
+    })
+
+    var curStudent = 0
+    var curHomework = 0
+    for (let i = 0; i < submissions.length; i++) {
+        while (curStudent < nStudent && !(submissions[i].studentId._id.equals(res[curStudent].studentId))) {
+            curStudent++;
+            curHomework = 0
+        }
+        if (temp[curHomework].homeworkId != submissions[i].homeworkId) {
+            curHomework = findHomework(temp, submissions[i].homeworkId)
+        }
+        res[curStudent].scores[temp[curHomework].ith] = submissions[i].score
+    }
+    return res
 }
 
 class SubmissionController {
@@ -237,6 +311,43 @@ class SubmissionController {
                 return res.status(400).json({ success: false, message: 'Lỗi rồi :(' })
             }
         }
+    }
+
+    getAllScoreOf1Class = async(req, res) => {
+        const classroomId = req.body.classroomId
+
+        // const result = await Submission.find({ score: { $exists: true, $ne: null }, homeworkId: { $exists: true, $ne: null } }, "score homeworkId studentId")
+        //     .populate({
+        //         path: 'homeworkId',
+        //         select: 'classroomId title',
+        //         match: { classroomId: classroomId }
+        //     })
+        //     .populate({
+        //         path: 'studentId',
+        //         select: 'username fullName'
+        //     })
+        // console.log(result)
+        // return res.status(200).json(result)
+
+        // get all homework of class in array
+        const classroom = await Classroom.findOne({ _id: classroomId }, "topicHomework listStudent")
+            .populate({
+                path: "topicHomework.homeworks",
+                select: "title createdAt"
+            })
+            .populate({
+                path: "listStudent",
+                select: 'fullName'
+            })
+        const arrayHomeworks = getArrayOfHomework(classroom.topicHomework)
+        const submissions = await Submission.find({ homeworkId: { $in: arrayHomeworks }, score: { $exists: true, $ne: null } },
+            "studentId score homeworkId"
+        ).populate({
+            path: 'studentId',
+            select: 'username fullName'
+        })
+        const result = createArrayResults(arrayHomeworks, classroom.listStudent, submissions)
+        return res.status(200).json({ arrayHomeworks, result })
     }
 }
 
