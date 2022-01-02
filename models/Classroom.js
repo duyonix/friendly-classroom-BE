@@ -13,7 +13,6 @@ const Classroom = new Schema({
     },
     description: {
         type: String,
-        required: true,
     },
     /*listHomework: [{
         type: ObjectId,
@@ -26,7 +25,7 @@ const Classroom = new Schema({
     listPost: [{
         type: ObjectId,
         ref: 'Post',
-    }, ],
+    },],
     teacherId: {
         type: ObjectId,
         ref: 'User',
@@ -34,7 +33,7 @@ const Classroom = new Schema({
     listStudent: [{
         type: ObjectId,
         ref: 'User',
-    }, ],
+    },],
     numberOfMember: {
         type: Number,
     },
