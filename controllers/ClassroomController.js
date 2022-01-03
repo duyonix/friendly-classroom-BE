@@ -5,7 +5,7 @@ const Comment = require('../models/Comment');
 const Classroom = require('../models/Classroom');
 const Submission = require('../models/Submission')
 
-const createDefaultSubmissionForEveryHomeworkInClass = async(code, studentId) => {
+const createDefaultSubmissionForEveryHomeworkInClass = async (code, studentId) => {
     const result = await Classroom.findOne({ code: code }, "topicHomework")
     const markDone = false
     const attachedFiles = []

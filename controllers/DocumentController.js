@@ -4,7 +4,7 @@ const Classroom = require('../models/Classroom');
 const mongoose = require('mongoose');
 const unitTable = ['B', 'KB', 'MB', 'GB', 'TB']
 
-const saveDocumentToMongoDB = async(_id, classroomId, title, description, creatorId, attachedFiles, fileAttributes, topic, duplicateTopicId) => {
+const saveDocumentToMongoDB = async (_id, classroomId, title, description, creatorId, attachedFiles, fileAttributes, topic, duplicateTopicId) => {
     const newDocument = new Document({ _id, classroomId, title, description, creatorId, attachedFiles, fileAttributes, topic });
     await newDocument.save();
 
@@ -12,13 +12,13 @@ const saveDocumentToMongoDB = async(_id, classroomId, title, description, creato
     await Classroom.updateOne({ 'topicDocument._id': duplicateTopicId }, { $push: { 'topicDocument.$.documents': _id } });
 };
 
-const addNewTopic = async(classroomId, topic) => {
+const addNewTopic = async (classroomId, topic) => {
     var myId = mongoose.Types.ObjectId();
     await Classroom.updateOne({ _id: classroomId }, { $push: { topicDocument: { _id: myId, topic: topic, documents: [] } } });
     return myId;
 };
 
-getSignedUrlDocument = async(documentId, filename) => {
+getSignedUrlDocument = async (documentId, filename) => {
     const destinationFirebase = `document/${documentId}/${filename}`;
     const config = {
         action: 'read',
@@ -28,7 +28,7 @@ getSignedUrlDocument = async(documentId, filename) => {
     return url;
 };
 
-const checkIfDuplicate = async(classroomId, topic) => {
+const checkIfDuplicate = async (classroomId, topic) => {
     /* check if topic exists in class
      * return _id of topic if yes, otherwise return null
      * return topics array used for check title in next step
@@ -101,7 +101,7 @@ const checkIfDuplicateTitle = (topics, title, documentId) => {
     return false
 }
 
-const removeDocumentOutOfTopic = async(duplicateTopicId, documentId, classroomId, isTheLastDocumentOfTopic) => {
+const removeDocumentOutOfTopic = async (duplicateTopicId, documentId, classroomId, isTheLastDocumentOfTopic) => {
     if (isTheLastDocumentOfTopic) {
         await Classroom.updateOne({ _id: classroomId }, { $pull: { topicDocument: { _id: duplicateTopicId } } })
     } else await Classroom.updateOne({ 'topicDocument._id': duplicateTopicId }, { $pull: { 'topicDocument.$.documents': documentId } })
@@ -114,7 +114,7 @@ const getFilenameFromURL = (url) => {
     return result.replace('%20', ' ')
 }
 
-const changeTopic = async(duplicateTopicId, topicId, topic, documentId, classroomId, isTheLastDocumentOfTopic) => {
+const changeTopic = async (duplicateTopicId, topicId, topic, documentId, classroomId, isTheLastDocumentOfTopic) => {
     await removeDocumentOutOfTopic(duplicateTopicId, documentId, classroomId, isTheLastDocumentOfTopic)
     if (!topicId) {
         topicId = await addNewTopic(classroomId, topic);
@@ -141,13 +141,15 @@ getFileExtension = (filename) => {
 }
 
 class DocumentController {
-    upload = async(req, res) => {
+    upload = async (req, res) => {
         try {
             const classroomId = req.body.classroomId;
             const title = req.body.title;
             const description = req.body.description;
             const creatorId = req.userId;
             const topic = req.body.topic;
+
+            console.log("description: ", description);
 
             var { duplicateTopicId, topics, isTheLastDocumentOfTopic } = await checkIfDuplicate(classroomId, topic);
             const isTitleExist = checkIfDuplicateTitle(topics, title, null)
@@ -201,7 +203,7 @@ class DocumentController {
     download = (req, res) => {
         try {
             const documentId = req.body.documentId;
-            Document.findOne({ _id: documentId }, function(err, document) {
+            Document.findOne({ _id: documentId }, function (err, document) {
                 try {
                     // if error or document not in database
                     if (err) {
@@ -228,7 +230,7 @@ class DocumentController {
         }
     };
 
-    getAllDocumentMetadataOfClass = async(req, res) => {
+    getAllDocumentMetadataOfClass = async (req, res) => {
         const classroomId = req.body.classroomId;
         const topicDocument = await Classroom.findOne({ _id: classroomId }, 'topicDocument').populate({
             path: 'topicDocument.documents',
@@ -242,7 +244,7 @@ class DocumentController {
         return res.status(200).json(topics);
     };
 
-    changeDocument = async(req, res) => {
+    changeDocument = async (req, res) => {
         try {
             const documentId = req.body.documentId
             const title = req.body.title
@@ -287,7 +289,7 @@ class DocumentController {
             }
         }
     }
-    changeDocumentFile = async(req, res) => {
+    changeDocumentFile = async (req, res) => {
         try {
             const documentId = req.body.documentId
             const file = req.file
@@ -334,7 +336,7 @@ class DocumentController {
         }
     }
 
-    eraseDocument = async(req, res) => {
+    eraseDocument = async (req, res) => {
         try {
             const documentId = req.body.documentId
 
