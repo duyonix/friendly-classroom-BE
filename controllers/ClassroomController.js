@@ -4,8 +4,9 @@ const User = require('../models/User');
 const Comment = require('../models/Comment');
 const Classroom = require('../models/Classroom');
 const Submission = require('../models/Submission')
+const firebase = require('../firebase');
 
-const createDefaultSubmissionForEveryHomeworkInClass = async (code, studentId) => {
+const createDefaultSubmissionForEveryHomeworkInClass = async(code, studentId) => {
     const result = await Classroom.findOne({ code: code }, "topicHomework")
     const markDone = false
     const attachedFiles = []
@@ -16,13 +17,34 @@ const createDefaultSubmissionForEveryHomeworkInClass = async (code, studentId) =
             const newSubmission = new Submission({
                 homeworkId,
                 studentId,
-                status,
+                markDone,
                 attachedFiles,
             });
             newSubmission.save();
         }
     }
 };
+
+const convertToArray = (topicHomework) => {
+    var res = []
+    const n = topicHomework.length
+    for (let i = 0; i < n; i++) {
+        res = res.concat(topicHomework[i].homeworks)
+    }
+    return res
+}
+
+const deleteSubmissionsOfStudentInClass = async(studentId, classroomId) => {
+    const result = await Classroom.findOne({ classroomId: classroomId }, "topicHomework")
+    const homeworks = convertToArray(result.topicHomework)
+    await Submission.deleteMany({ studentId: studentId, homewordId: { $in: homeworks } })
+        // submission/${homeworkId}/${studentId}/${file.filename}
+    for (let i = 0; i < homeworks.length; i++) {
+        await firebase.bucket.deleteFiles({
+            prefix: `submission/${homeworks[i]}/${studentId}`
+        })
+    }
+}
 
 class ClassroomController {
     get = async(req, res) => {
@@ -281,7 +303,7 @@ class ClassroomController {
             if (!updatedClassroom) {
                 throw new Error('Bạn không có quyền xóa học sinh');
             }
-            if (!classroom.listStudent.includes(studentId)) {
+            if (!updatedClassroom.listStudent.includes(studentId)) {
                 throw new Error('Học sinh này không có trong lớp');
             }
             updatedClassroom.listStudent.pull({ _id: studentId });
@@ -294,6 +316,7 @@ class ClassroomController {
             updatedMember.classStudent.pull({ _id: req.params.classroomId });
 
             await updatedMember.save();
+            await deleteSubmissionsOfStudentInClass(studentId, req.params.classroomId)
             res.json({
                 success: true,
                 message: 'Xóa học sinh thành công',
