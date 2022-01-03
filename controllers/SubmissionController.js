@@ -111,7 +111,8 @@ createArrayResults = (arrayHomeworks, listStudent, submissions) => {
     for (let i = 0; i < nStudent; i++) {
         const student = {
             fullName: listStudent[i].fullName,
-            studentId: listStudent[i]._id
+            studentId: listStudent[i]._id,
+            avatarUrl: listStudent[i].avatarUrl
         }
         student.scores = Array.from({ length: nHomework }, (_, i) => null)
         res.push(student)
@@ -324,7 +325,7 @@ class SubmissionController {
             })
             .populate({
                 path: "listStudent",
-                select: 'fullName'
+                select: 'fullName avatarUrl'
             })
         const arrayHomeworks = getArrayOfHomework(classroom.topicHomework)
         const submissions = await Submission.find({ homeworkId: { $in: arrayHomeworks }, score: { $exists: true, $ne: null } },
