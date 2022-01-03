@@ -316,19 +316,6 @@ class SubmissionController {
     getAllScoreOf1Class = async(req, res) => {
         const classroomId = req.body.classroomId
 
-        // const result = await Submission.find({ score: { $exists: true, $ne: null }, homeworkId: { $exists: true, $ne: null } }, "score homeworkId studentId")
-        //     .populate({
-        //         path: 'homeworkId',
-        //         select: 'classroomId title',
-        //         match: { classroomId: classroomId }
-        //     })
-        //     .populate({
-        //         path: 'studentId',
-        //         select: 'username fullName'
-        //     })
-        // console.log(result)
-        // return res.status(200).json(result)
-
         // get all homework of class in array
         const classroom = await Classroom.findOne({ _id: classroomId }, "topicHomework listStudent")
             .populate({

@@ -6,6 +6,32 @@ const argon2 = require('argon2')
 
 const Homework = require('../models/Homework');
 const Submission = require('../models/Submission');
+const Classroom = require('../models/Classroom')
+
+const findHomeworkIndex = (temp, homeworkId) => {
+    console.log(temp)
+    console.log(homeworkId)
+    var l = 0
+    var r = temp.length - 1
+    while (l <= r) {
+        var m = Math.round((l + r) / 2)
+        if (homeworkId < temp[m].homeworkId) {
+            r = m - 1
+        } else if (homeworkId > temp[m].homeworkId) {
+            l = m + 1
+        } else return m
+    }
+    return -1
+}
+
+const convertToArray = (homeworksInClass) => {
+    var res = []
+    const n = homeworksInClass.topicHomework.length
+    for (let i = 0; i < n; i++) {
+        res = res.concat(homeworksInClass.topicHomework[i].homeworks)
+    }
+    return res
+}
 
 getSignedUrlAvatar = async(filename) => {
     const destinationFirebase = `avatar/${filename}`;
@@ -230,15 +256,47 @@ class UserController {
             const classroomId = req.body.classroomId
             const userId = req.userId
 
-            const result = await Submission.find({ studentId: userId, score: { $exists: true, $ne: null } }, "homeworkId score")
+            // const result = await Submission.find({ studentId: userId, score: { $exists: true, $ne: null } }, "homeworkId score")
+            //     .populate({
+            //         path: 'homeworkId',
+            //         select: 'title',
+            //         match: {
+            //             classroomId: classroomId
+            //         }
+            //     })
+            const homeworksInClass =
+                await Classroom.findOne({ _id: classroomId }, 'topicHomework')
+                .populate({
+                    path: 'topicHomework.homeworks',
+                    select: 'title'
+                })
+            const homeworks = convertToArray(homeworksInClass)
+            const submissions =
+                await Submission.find({ studentId: userId, score: { $exists: true, $ne: null } }, 'homeworkId score')
                 .populate({
                     path: 'homeworkId',
-                    select: 'title',
-                    match: {
-                        classroomId: classroomId
-                    }
+                    select: '_id',
+                    match: { classroomId: classroomId }
                 })
-            return res.status(200).json({ success: true, result })
+            const temp = []
+            const result = []
+            for (let i = 0; i < homeworks.length; i++) {
+                const obj = {
+                    homeworkId: homeworks[i]._id,
+                    ith: i
+                }
+                temp.push(obj)
+                result.push(null)
+            }
+            temp.sort((a, b) => (a.homeworkId < b.homeworkId ? -1 : 1))
+            for (let i = 0; i < submissions.length; i++) {
+                const index = findHomeworkIndex(temp, submissions[i].homeworkId._id)
+                if (index != -1) {
+                    const ith = temp[index].ith
+                    result[ith] = submissions[i].score
+                }
+            }
+            return res.status(200).json({ success: true, homeworks, result })
         } catch (err) {
             console.log(err)
             return res.status(400).json({ success: false, message: 'Error' })
