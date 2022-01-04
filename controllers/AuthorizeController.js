@@ -8,9 +8,7 @@ const firebase = require('../firebase')
 const generateToken = (payload) => {
     const { id, username } = payload;
     const accessToken = jwt.sign({ id, username },
-        process.env.ACCESS_TOKEN_SECRET, {
-            expiresIn: '10h',
-        }
+        process.env.ACCESS_TOKEN_SECRET
     );
     return accessToken
 };
