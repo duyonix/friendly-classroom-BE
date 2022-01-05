@@ -18,9 +18,9 @@ const createDefaultSubmissionForEveryHomeworkInClass = async(code, studentId) =>
                 homeworkId,
                 studentId,
                 markDone,
-                attachedFiles,
+                attachedFiles
             });
-            newSubmission.save();
+            await newSubmission.save();
         }
     }
 };
@@ -35,9 +35,11 @@ const convertToArray = (topicHomework) => {
 }
 
 const deleteSubmissionsOfStudentInClass = async(studentId, classroomId) => {
-    const result = await Classroom.findOne({ classroomId: classroomId }, "topicHomework")
+    const result = await Classroom.findOne({ _id: classroomId }, "topicHomework")
+    console.log(result.topicHomework)
     const homeworks = convertToArray(result.topicHomework)
-    await Submission.deleteMany({ studentId: studentId, homewordId: { $in: homeworks } })
+    console.log(homeworks)
+    await Submission.deleteMany({ studentId: studentId, homeworkId: { $in: homeworks } })
         // submission/${homeworkId}/${studentId}/${file.filename}
     for (let i = 0; i < homeworks.length; i++) {
         await firebase.bucket.deleteFiles({
@@ -256,7 +258,7 @@ class ClassroomController {
             }
 
             updatedClassroom.listStudent.push(req.userId);
-            updatedClassroom.numberOfMember += 1;
+            updatedClassroom.numberOfMember += 1;   
             await updatedClassroom.save();
 
             // TODO: cập nhật danh sách classroom cũa user
