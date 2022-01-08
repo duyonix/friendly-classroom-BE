@@ -414,7 +414,8 @@ class ClassroomController {
             // TODO: cập nhật danh sách classroom cũa user
 
             student.classStudent.push({ _id: req.params.classroomId });
-
+            const code = updatedClassroom.code
+            await createDefaultSubmissionForEveryHomeworkInClass(code, student._id)
             await student.save();
             res.json({
                 success: true,
@@ -422,11 +423,12 @@ class ClassroomController {
                 classroom: updatedClassroom,
             });
         } catch (error) {
-            if (error.message)
-                res.status(400).json({
+            if (error.message){
+                return res.status(400).json({
                     success: false,
                     message: error.message,
                 });
+            } 
             console.log(error);
             res.status(500).json({
                 success: false,
