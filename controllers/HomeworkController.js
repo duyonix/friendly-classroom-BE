@@ -200,9 +200,7 @@ class HomeworkController {
             // console.log("description: ", description);
 
             var { duplicateTopicId, topics, isTheLastHomeworkOfTopic } = await checkIfDuplicate(classroomId, topic);
-            if (!duplicateTopicId) {
-                duplicateTopicId = await addNewTopic(classroomId, topic);
-            }
+            
 
             // check if class has homework which has same title
             for (let i = 0; i < topics.length; i++) {
@@ -211,6 +209,9 @@ class HomeworkController {
                         throw new Error('2 homeworks have same name in 1 class');
                     }
                 }
+            }
+            if (!duplicateTopicId) {
+                duplicateTopicId = await addNewTopic(classroomId, topic);
             }
             var _id = mongoose.Types.ObjectId();
 
