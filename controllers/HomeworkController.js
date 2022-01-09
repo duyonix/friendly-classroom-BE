@@ -404,6 +404,11 @@ class HomeworkController {
             var { duplicateTopicId, topics, isTheLastHomeworkOfTopic } = await checkIfDuplicate(classroomId, topic)
             await removeHomeworkOutOfTopic(duplicateTopicId, homeworkId, classroomId, isTheLastHomeworkOfTopic)
             await Homework.findOneAndDelete({ _id: homeworkId })
+            await Submission.deleteMany({homeworkId: homeworkId});
+            // destination: `submission/${homeworkId}/${studentId}/${file.filename}`,
+            await firebase.bucket.deleteFiles({
+                prefix: `submission/${homeworkId}`
+            });
             await firebase.bucket.deleteFiles({
                 prefix: `homework/${homeworkId}`
             })
