@@ -3,6 +3,7 @@ const firebase = require('../firebase');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema.Types;
 const argon2 = require('argon2')
+const fs = require('fs-extra');
 
 const Homework = require('../models/Homework');
 const Submission = require('../models/Submission');
@@ -125,6 +126,7 @@ class UserController {
                 }
                 const signedUrl = await getSignedUrlAvatar(filename);
                 await User.findOneAndUpdate({ _id: userId }, { $set: { avatarUrl: signedUrl[0], ifHasAvatar: true } });
+                fs.emptyDir('uploads/');
                 return res.status(200).json({ success: true, message: 'Thay đổi avatar thành công !!!' });
             });
         } catch (err) {
