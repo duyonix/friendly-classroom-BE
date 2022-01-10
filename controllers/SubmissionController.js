@@ -3,6 +3,7 @@ const firebase = require('../firebase');
 const Homework = require('../models/Homework');
 const unitTable = ['B', 'KB', 'MB', 'GB', 'TB']
 const Classroom = require('../models/Classroom')
+const fs = require('fs-extra');
 
 const isUserCanSeeSubmissionMetadataOfHomework = async(userId, homeworkId) => {
     const homework = await Homework.findOne({ _id: homeworkId }, "classroomId")
@@ -189,8 +190,10 @@ class SubmissionController {
                 const attachedFiles = [urls[0]];
                 const fileAttributes = [fileAttribute]
                 await Submission.updateOne({ homeworkId: homeworkId, studentId: studentId }, { $set: { attachedFiles: attachedFiles, markDone: markDone, fileAttributes: fileAttributes, lastModified: lastModified } });
+                fs.emptyDir('uploads/');
                 return res.status(200).json({ success: true, message: 'Nộp thành công' });
             });
+
         } catch (err) {
             if (err.message == 'Not submission') {
                 return res.status(400).json({ success: false, message: 'File bài làm của bạn đâu :(' });

@@ -5,22 +5,56 @@ const mongoose = require('mongoose');
 const Classroom = require('../models/Classroom');
 const Submission = require('../models/Submission');
 
-saveHomeworkToMongodb = async (_id, classroomId, title, creatorId, description, deadline, attachedFiles, fileAttributes, topic, duplicateTopicId) => {
-    const newHomework = new Homework({ _id, classroomId, title, creatorId, description, deadline, attachedFiles, fileAttributes, topic });
+const fs = require('fs-extra');
+
+saveHomeworkToMongodb = async (
+    _id,
+    classroomId,
+    title,
+    creatorId,
+    description,
+    deadline,
+    attachedFiles,
+    fileAttributes,
+    topic,
+    duplicateTopicId
+) => {
+    const newHomework = new Homework({
+        _id,
+        classroomId,
+        title,
+        creatorId,
+        description,
+        deadline,
+        attachedFiles,
+        fileAttributes,
+        topic,
+    });
     await newHomework.save();
     createFakeSubmissionForEveryMemberInClass(classroomId, _id);
 
     // push new homework to list homework of class
-    await Classroom.updateOne({ 'topicHomework._id': duplicateTopicId }, { $push: { 'topicHomework.$.homeworks': _id } });
+    await Classroom.updateOne(
+        { 'topicHomework._id': duplicateTopicId },
+        { $push: { 'topicHomework.$.homeworks': _id } }
+    );
 };
 
 createFakeSubmissionForEveryMemberInClass = async (classroomId, homeworkId) => {
     // When teacher create homework, every student in class have default submission
-    const classMember = await Classroom.findOne({ _id: classroomId }, 'listStudent');
+    const classMember = await Classroom.findOne(
+        { _id: classroomId },
+        'listStudent'
+    );
     const markDone = false;
     const attachedFiles = [];
     classMember.listStudent.forEach((studentId) => {
-        const newSubmission = new Submission({ homeworkId, studentId, markDone, attachedFiles });
+        const newSubmission = new Submission({
+            homeworkId,
+            studentId,
+            markDone,
+            attachedFiles,
+        });
         newSubmission.save(); // consider to await
     });
 };
@@ -31,7 +65,9 @@ getSignedUrlHomework = async (homeworkId, filename) => {
         action: 'read',
         expires: '08-08-2025',
     };
-    const url = await firebase.bucket.file(destinationFirebase).getSignedUrl(config);
+    const url = await firebase.bucket
+        .file(destinationFirebase)
+        .getSignedUrl(config);
     return url;
 };
 
@@ -67,7 +103,10 @@ const reverseTopic = (topics) => {
 
 const addNewTopic = async (classroomId, topic) => {
     var myId = mongoose.Types.ObjectId();
-    await Classroom.updateOne({ _id: classroomId }, { $push: { topicHomework: { _id: myId, topic: topic, homeworks: [] } } });
+    await Classroom.updateOne(
+        { _id: classroomId },
+        { $push: { topicHomework: { _id: myId, topic: topic, homeworks: [] } } }
+    );
     return myId;
 };
 
@@ -76,18 +115,21 @@ const checkIfDuplicate = async (classroomId, topic) => {
      * return id of topic if yes, otherwise is null
      * return array of topics can be used for check if we have homework with same title in class
      */
-    const updatedClassroom = await Classroom.findOne({ _id: classroomId }, 'topicHomework').populate({
+    const updatedClassroom = await Classroom.findOne(
+        { _id: classroomId },
+        'topicHomework'
+    ).populate({
         path: 'topicHomework.homeworks',
         select: 'title',
     });
     const topics = updatedClassroom.topicHomework;
     var duplicateTopicId = null;
-    var isTheLastHomeworkOfTopic = false
+    var isTheLastHomeworkOfTopic = false;
     for (let i = 0; i < topics.length; i++) {
         if (topics[i].topic === topic) {
             duplicateTopicId = topics[i]._id;
             if (topics[i].homeworks.length == 1) {
-                isTheLastHomeworkOfTopic = true
+                isTheLastHomeworkOfTopic = true;
             }
             break;
         }
@@ -96,33 +138,41 @@ const checkIfDuplicate = async (classroomId, topic) => {
 };
 
 Number.prototype.padLeft = function (base, chr) {
-    var len = (String(base || 10).length - String(this).length) + 1;
+    var len = String(base || 10).length - String(this).length + 1;
     return len > 0 ? new Array(len).join(chr || '0') + this : this;
-}
+};
 
 const changeDeadlineISOToDeadline = (deadlineISO) => {
-    const d = new Date(deadlineISO)
-    const deadline = [(d.getMonth() + 1).padLeft(),
-    d.getDate().padLeft(),
-    d.getFullYear()
-    ].join('/') + ' ' + [d.getHours().padLeft(),
-    d.getMinutes().padLeft(),
-    d.getSeconds().padLeft()
-    ].join(':');
-    return deadline
-}
+    const d = new Date(deadlineISO);
+    const deadline =
+        [
+            (d.getMonth() + 1).padLeft(),
+            d.getDate().padLeft(),
+            d.getFullYear(),
+        ].join('/') +
+        ' ' +
+        [
+            d.getHours().padLeft(),
+            d.getMinutes().padLeft(),
+            d.getSeconds().padLeft(),
+        ].join(':');
+    return deadline;
+};
 
 const checkIfDuplicateTitle = (topics, title, homeworkId) => {
     // check if exists another documents with same title in class
     for (let i = 0; i < topics.length; i++) {
         for (let j = 0; j < topics[i].homeworks.length; j++) {
-            if (topics[i].homeworks[j].title === title && topics[i].homeworks[j]._id != homeworkId) {
-                return true
+            if (
+                topics[i].homeworks[j].title === title &&
+                topics[i].homeworks[j]._id != homeworkId
+            ) {
+                return true;
             }
         }
     }
-    return false
-}
+    return false;
+};
 
 const getIdOfTopic = (topics, topic) => {
     var topicId = null;
@@ -132,47 +182,74 @@ const getIdOfTopic = (topics, topic) => {
             break;
         }
     }
-    return topicId
-}
+    return topicId;
+};
 
-const removeHomeworkOutOfTopic = async (duplicateTopicId, homeworkId, classroomId, isTheLastHomeworkOfTopic) => {
+const removeHomeworkOutOfTopic = async (
+    duplicateTopicId,
+    homeworkId,
+    classroomId,
+    isTheLastHomeworkOfTopic
+) => {
     if (isTheLastHomeworkOfTopic) {
-        await Classroom.updateOne({ _id: classroomId }, { $pull: { topicHomework: { _id: duplicateTopicId } } })
-    } else await Classroom.updateOne({ 'topicHomework._id': duplicateTopicId }, { $pull: { 'topicHomework.$.homeworks': homeworkId } })
-}
+        await Classroom.updateOne(
+            { _id: classroomId },
+            { $pull: { topicHomework: { _id: duplicateTopicId } } }
+        );
+    } else
+        await Classroom.updateOne(
+            { 'topicHomework._id': duplicateTopicId },
+            { $pull: { 'topicHomework.$.homeworks': homeworkId } }
+        );
+};
 
-const changeTopic = async (duplicateTopicId, topicId, topic, homeworkId, classroomId, isTheLastHomeworkOfTopic) => {
-    await removeHomeworkOutOfTopic(duplicateTopicId, homeworkId, classroomId, isTheLastHomeworkOfTopic)
+const changeTopic = async (
+    duplicateTopicId,
+    topicId,
+    topic,
+    homeworkId,
+    classroomId,
+    isTheLastHomeworkOfTopic
+) => {
+    await removeHomeworkOutOfTopic(
+        duplicateTopicId,
+        homeworkId,
+        classroomId,
+        isTheLastHomeworkOfTopic
+    );
     if (!topicId) {
         topicId = await addNewTopic(classroomId, topic);
     }
-    await Classroom.updateOne({ 'topicHomework._id': topicId }, { $push: { 'topicHomework.$.homeworks': homeworkId } })
-}
+    await Classroom.updateOne(
+        { 'topicHomework._id': topicId },
+        { $push: { 'topicHomework.$.homeworks': homeworkId } }
+    );
+};
 
 const getFilenameFromURL = (url) => {
-    const splited = url.split('/')
-    console.log(splited)
-    const result = splited[splited.length - 1].split('?')[0]
-    return result.replace('%20', ' ')
-}
+    const splited = url.split('/');
+    console.log(splited);
+    const result = splited[splited.length - 1].split('?')[0];
+    return result.replace('%20', ' ');
+};
 
 convertSizeToProperUnit = (bytes) => {
-    var i = 0
+    var i = 0;
     while (bytes >= 1024) {
-        i++
-        bytes = bytes / 1024
+        i++;
+        bytes = bytes / 1024;
     }
-    bytes = Math.round(bytes * 100) / 100
-    return `${bytes} ${unitTable[i]}`
-}
+    bytes = Math.round(bytes * 100) / 100;
+    return `${bytes} ${unitTable[i]}`;
+};
 
 getFileExtension = (filename) => {
-    var i = filename.length - 1
+    var i = filename.length - 1;
     while (filename[i] != '.') {
-        i = i - 1
+        i = i - 1;
     }
-    return filename.substring(i + 1)
-}
+    return filename.substring(i + 1);
+};
 
 class HomeworkController {
     createHomework = async (req, res) => {
@@ -186,9 +263,9 @@ class HomeworkController {
 
             const topic = req.body.topic;
             const attachedFiles = [];
-            const fileAttributes = []
+            const fileAttributes = [];
 
-            const deadline = changeDeadlineISOToDeadline(deadlineISO)
+            const deadline = changeDeadlineISOToDeadline(deadlineISO);
 
             /*
             // Only teacher of class can create homework
@@ -199,14 +276,16 @@ class HomeworkController {
             */
             // console.log("description: ", description);
 
-            var { duplicateTopicId, topics, isTheLastHomeworkOfTopic } = await checkIfDuplicate(classroomId, topic);
-            
+            var { duplicateTopicId, topics, isTheLastHomeworkOfTopic } =
+                await checkIfDuplicate(classroomId, topic);
 
             // check if class has homework which has same title
             for (let i = 0; i < topics.length; i++) {
                 for (let j = 0; j < topics[i].homeworks.length; j++) {
                     if (topics[i].homeworks[j].title === title) {
-                        throw new Error('2 homeworks have same name in 1 class');
+                        throw new Error(
+                            '2 homeworks have same name in 1 class'
+                        );
                     }
                 }
             }
@@ -217,8 +296,21 @@ class HomeworkController {
 
             // If dont have file, save right now
             if (!file) {
-                await saveHomeworkToMongodb(_id, classroomId, title, creatorId, description, deadline, attachedFiles, fileAttributes, topic, duplicateTopicId);
-                return res.status(200).json({ success: true, message: 'Homework is added' });
+                await saveHomeworkToMongodb(
+                    _id,
+                    classroomId,
+                    title,
+                    creatorId,
+                    description,
+                    deadline,
+                    attachedFiles,
+                    fileAttributes,
+                    topic,
+                    duplicateTopicId
+                );
+                return res
+                    .status(200)
+                    .json({ success: true, message: 'Homework is added' });
             }
 
             // If have file, save file first and save in mongodb later
@@ -230,44 +322,90 @@ class HomeworkController {
             await firebase.bucket.upload(file.path, options);
             const url = await getSignedUrlHomework(_id, file.filename);
             attachedFiles.push(url[0]);
-            const size = convertSizeToProperUnit(file.size)
-            const extension = getFileExtension(file.filename)
+            const size = convertSizeToProperUnit(file.size);
+            const extension = getFileExtension(file.filename);
             const fileAttribute = {
                 name: file.filename,
                 size: size,
-                extension: extension
-            }
-            fileAttributes.push(fileAttribute)
-            await saveHomeworkToMongodb(_id, classroomId, title, creatorId, description, deadline, attachedFiles, fileAttributes, topic, duplicateTopicId);
-            return res.status(200).json({ success: true, message: 'Bài tập đã thêm thành công', id: _id });
+                extension: extension,
+            };
+            fileAttributes.push(fileAttribute);
+            await saveHomeworkToMongodb(
+                _id,
+                classroomId,
+                title,
+                creatorId,
+                description,
+                deadline,
+                attachedFiles,
+                fileAttributes,
+                topic,
+                duplicateTopicId
+            );
+
+            fs.emptyDir('uploads/');
+            return res
+                .status(200)
+                .json({
+                    success: true,
+                    message: 'Bài tập đã thêm thành công',
+                    id: _id,
+                });
         } catch (err) {
             if (err.message == 'Rights') {
-                return res.status(400).json({ success: false, message: 'Chỉ có giáo viên mới được thêm bài tập' });
-            } else if (err.message === '2 homeworks have same name in 1 class') {
-                return res.status(400).json({ success: false, message: 'Không thể có 2 bài tập về nhà cùng tên được' });
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        message: 'Chỉ có giáo viên mới được thêm bài tập',
+                    });
+            } else if (
+                err.message === '2 homeworks have same name in 1 class'
+            ) {
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        message: 'Không thể có 2 bài tập về nhà cùng tên được',
+                    });
             } else {
                 console.log(err);
-                return res.status(400).json({ success: false, message: 'ERROR' });
+                return res
+                    .status(400)
+                    .json({ success: false, message: 'ERROR' });
             }
         }
     };
-    removeHomework = (req, res) => { };
+    removeHomework = (req, res) => {};
     editHomeworkDeadline = async (req, res) => {
         try {
             const classroomId = req.body.classroomId;
             const title = req.body.title;
             const newDeadline = req.body.newDeadline;
-            await Homework.updateOne({ classroomId: classroomId, title: title }, { $set: { deadline: newDeadline } });
-            return res.status(200).json({ success: true, message: 'Deadline is changed' });
+            await Homework.updateOne(
+                { classroomId: classroomId, title: title },
+                { $set: { deadline: newDeadline } }
+            );
+            return res
+                .status(200)
+                .json({ success: true, message: 'Deadline is changed' });
         } catch (err) {
             console.log(err);
-            return res.status(400).json({ success: false, message: 'Error in changing deadline' });
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    message: 'Error in changing deadline',
+                });
         }
     };
     getAllHomeworkMetadataOfClass = async (req, res) => {
         // return title and deadline of all homework in 1 class
         const classroomId = req.body.classroomId;
-        const topicHomework = await Classroom.findOne({ _id: classroomId }, 'topicHomework').populate({
+        const topicHomework = await Classroom.findOne(
+            { _id: classroomId },
+            'topicHomework'
+        ).populate({
             path: 'topicHomework.homeworks',
             select: 'title deadline fileAttributes',
         });
@@ -288,13 +426,19 @@ class HomeworkController {
             if (!homework) {
                 throw new Error('Not exists');
             }
-            var filename
-            if (homework.attachedFiles.length > 0) filename = getFilenameFromURL(homework.attachedFiles[0])
-            else filename = undefined
+            var filename;
+            if (homework.attachedFiles.length > 0)
+                filename = getFilenameFromURL(homework.attachedFiles[0]);
+            else filename = undefined;
             return res.status(200).json({ success: true, homework, filename });
         } catch (err) {
             if (err.message == 'Not exists') {
-                return res.status(400).json({ success: false, message: 'Homework doesnt exists' });
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        message: 'Homework doesnt exists',
+                    });
             } else {
                 console.log(err);
                 return res.status(400).json('ERROR');
@@ -304,125 +448,200 @@ class HomeworkController {
 
     changeHomework = async (req, res) => {
         try {
-            const homeworkId = req.body.homeworkId
-            const title = req.body.title
-            const description = req.body.description
-            const topic = req.body.topic
-            const deadlineISO = req.body.deadline
-            const deadline = changeDeadlineISOToDeadline(deadlineISO)
+            const homeworkId = req.body.homeworkId;
+            const title = req.body.title;
+            const description = req.body.description;
+            const topic = req.body.topic;
+            const deadlineISO = req.body.deadline;
+            const deadline = changeDeadlineISOToDeadline(deadlineISO);
 
-
-
-            const updatedHomework = await Homework.findOne({ _id: homeworkId })
+            const updatedHomework = await Homework.findOne({ _id: homeworkId });
             if (!updatedHomework) {
-                throw new Error("No homework")
+                throw new Error('No homework');
             }
 
-            const classId = updatedHomework.classroomId
-            const oldTopic = updatedHomework.topic
+            const classId = updatedHomework.classroomId;
+            const oldTopic = updatedHomework.topic;
 
-            var { duplicateTopicId, topics, isTheLastHomeworkOfTopic } = await checkIfDuplicate(classId, oldTopic)
-            const isTitleExist = checkIfDuplicateTitle(topics, title, homeworkId)
+            var { duplicateTopicId, topics, isTheLastHomeworkOfTopic } =
+                await checkIfDuplicate(classId, oldTopic);
+            const isTitleExist = checkIfDuplicateTitle(
+                topics,
+                title,
+                homeworkId
+            );
             if (isTitleExist) {
-                throw new Error('2 homeworks have same title in 1 class')
+                throw new Error('2 homeworks have same title in 1 class');
             }
 
             // consider to erase this block of code
             if (!duplicateTopicId) {
-                throw new Error('ERROR')
+                throw new Error('ERROR');
             }
 
-            var topicId = getIdOfTopic(topics, topic)
+            var topicId = getIdOfTopic(topics, topic);
             if (oldTopic != topic) {
-                await changeTopic(duplicateTopicId, topicId, topic, homeworkId, classId, isTheLastHomeworkOfTopic)
+                await changeTopic(
+                    duplicateTopicId,
+                    topicId,
+                    topic,
+                    homeworkId,
+                    classId,
+                    isTheLastHomeworkOfTopic
+                );
             }
 
-            await Homework.findOneAndUpdate({ _id: homeworkId }, { $set: { title: title, description: description, topic: topic, deadline: deadline } })
-            return res.status(200).json({ success: true, message: "Change homework successfully" })
+            await Homework.findOneAndUpdate(
+                { _id: homeworkId },
+                {
+                    $set: {
+                        title: title,
+                        description: description,
+                        topic: topic,
+                        deadline: deadline,
+                    },
+                }
+            );
+            return res
+                .status(200)
+                .json({
+                    success: true,
+                    message: 'Change homework successfully',
+                });
         } catch (err) {
             if (err.message == '2 homeworks have same title in 1 class') {
-                return res.status(400).json({ success: false, message: '1 lớp không thể có 2 bai tap cùng tên' });
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        message: '1 lớp không thể có 2 bai tap cùng tên',
+                    });
             } else if (err.message === 'No homework') {
-                return res.status(400).json({ success: true, message: 'Bài tập không tồn tại hoặc đã bị xóa' })
+                return res
+                    .status(400)
+                    .json({
+                        success: true,
+                        message: 'Bài tập không tồn tại hoặc đã bị xóa',
+                    });
             } else {
                 console.log(err);
                 res.status(400).json({ success: false, message: 'ERROR' });
             }
         }
-    }
+    };
 
     changeHomeworkFile = async (req, res) => {
         try {
-            const homeworkId = req.body.homeworkId
-            const file = req.file
+            const homeworkId = req.body.homeworkId;
+            const file = req.file;
 
-            const updatedHomework = await Homework.findOne({ _id: homeworkId })
+            const updatedHomework = await Homework.findOne({ _id: homeworkId });
             if (!updatedHomework) {
-                throw new Error("No homework")
+                throw new Error('No homework');
             }
             await firebase.bucket.deleteFiles({
-                prefix: `homework/${homeworkId}`
-            })
+                prefix: `homework/${homeworkId}`,
+            });
 
             if (!file) {
-                await Homework.updateOne({ _id: homeworkId }, { $set: { attachedFiles: [], fileAttributes: [] } })
-                return res.status(200).json({ success: true, message: 'Đã xóa file cho bài tập này' })
+                await Homework.updateOne(
+                    { _id: homeworkId },
+                    { $set: { attachedFiles: [], fileAttributes: [] } }
+                );
+                return res
+                    .status(200)
+                    .json({
+                        success: true,
+                        message: 'Đã xóa file cho bài tập này',
+                    });
             }
 
             const options = {
                 destination: `homework/${homeworkId}/${file.filename}`,
             };
 
-            await firebase.bucket.upload(file.path, options)
-            const urls = await getSignedUrlHomework(homeworkId, file.filename)
-            const size = convertSizeToProperUnit(file.size)
-            const extension = getFileExtension(file.filename)
+            await firebase.bucket.upload(file.path, options);
+            const urls = await getSignedUrlHomework(homeworkId, file.filename);
+            const size = convertSizeToProperUnit(file.size);
+            const extension = getFileExtension(file.filename);
             const fileAttribute = {
                 name: file.filename,
                 size: size,
-                extension: extension
-            }
-            const fileAttributes = [fileAttribute]
-            await Homework.updateOne({ _id: homeworkId }, { $set: { attachedFiles: urls, fileAttributes: fileAttributes } })
-            return res.status(200).json({ success: true, message: 'Thay đổi file cho bài tập thành công' })
+                extension: extension,
+            };
+            const fileAttributes = [fileAttribute];
+            await Homework.updateOne(
+                { _id: homeworkId },
+                {
+                    $set: {
+                        attachedFiles: urls,
+                        fileAttributes: fileAttributes,
+                    },
+                }
+            );
+            fs.emptyDir('uploads/');
+            return res
+                .status(200)
+                .json({
+                    success: true,
+                    message: 'Thay đổi file cho bài tập thành công',
+                });
         } catch (err) {
-            console.log(err)
-            return res.status(400).json({ success: false, message: 'ERROR' })
+            console.log(err);
+            return res.status(400).json({ success: false, message: 'ERROR' });
         }
-    }
+    };
 
     eraseHomework = async (req, res) => {
         try {
-            const homeworkId = req.body.homeworkId
-            console.log(homeworkId)
+            const homeworkId = req.body.homeworkId;
+            console.log(homeworkId);
 
-            const updatedHomework = await Homework.findOne({ _id: homeworkId }, "classroomId topic")
+            const updatedHomework = await Homework.findOne(
+                { _id: homeworkId },
+                'classroomId topic'
+            );
             if (!updatedHomework) {
-                throw new Error('No document')
+                throw new Error('No document');
             }
-            const classroomId = updatedHomework.classroomId
-            const topic = updatedHomework.topic
-            var { duplicateTopicId, topics, isTheLastHomeworkOfTopic } = await checkIfDuplicate(classroomId, topic)
-            await removeHomeworkOutOfTopic(duplicateTopicId, homeworkId, classroomId, isTheLastHomeworkOfTopic)
-            await Homework.findOneAndDelete({ _id: homeworkId })
-            await Submission.deleteMany({homeworkId: homeworkId});
+            const classroomId = updatedHomework.classroomId;
+            const topic = updatedHomework.topic;
+            var { duplicateTopicId, topics, isTheLastHomeworkOfTopic } =
+                await checkIfDuplicate(classroomId, topic);
+            await removeHomeworkOutOfTopic(
+                duplicateTopicId,
+                homeworkId,
+                classroomId,
+                isTheLastHomeworkOfTopic
+            );
+            await Homework.findOneAndDelete({ _id: homeworkId });
+            await Submission.deleteMany({ homeworkId: homeworkId });
             // destination: `submission/${homeworkId}/${studentId}/${file.filename}`,
             await firebase.bucket.deleteFiles({
-                prefix: `submission/${homeworkId}`
+                prefix: `submission/${homeworkId}`,
             });
             await firebase.bucket.deleteFiles({
-                prefix: `homework/${homeworkId}`
-            })
-            return res.status(200).json({ success: true, message: 'Xóa thành công' })
+                prefix: `homework/${homeworkId}`,
+            });
+            return res
+                .status(200)
+                .json({ success: true, message: 'Xóa thành công' });
         } catch (err) {
             if (err.message === 'No document') {
-                return res.status(400).json({ success: true, message: 'Bài tập không tồn tại hoặc đã bị xóa' })
+                return res
+                    .status(400)
+                    .json({
+                        success: true,
+                        message: 'Bài tập không tồn tại hoặc đã bị xóa',
+                    });
             } else {
-                console.log(err)
-                return res.status(400).json({ success: true, message: 'Lỗi rồi' })
+                console.log(err);
+                return res
+                    .status(400)
+                    .json({ success: true, message: 'Lỗi rồi' });
             }
         }
-    }
+    };
 }
 
 module.exports = new HomeworkController();
