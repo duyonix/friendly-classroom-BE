@@ -257,15 +257,6 @@ class UserController {
         try {
             const classroomId = req.body.classroomId
             const userId = req.userId
-
-            // const result = await Submission.find({ studentId: userId, score: { $exists: true, $ne: null } }, "homeworkId score")
-            //     .populate({
-            //         path: 'homeworkId',
-            //         select: 'title',
-            //         match: {
-            //             classroomId: classroomId
-            //         }
-            //     })
             const homeworksInClass =
                 await Classroom.findOne({ _id: classroomId }, 'topicHomework')
                 .populate({
@@ -292,6 +283,7 @@ class UserController {
             }
             temp.sort((a, b) => (a.homeworkId < b.homeworkId ? -1 : 1))
             for (let i = 0; i < submissions.length; i++) {
+                if(submissions[i].homeworkId==null) continue
                 const index = findHomeworkIndex(temp, submissions[i].homeworkId._id)
                 if (index != -1) {
                     const ith = temp[index].ith

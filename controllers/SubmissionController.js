@@ -106,9 +106,6 @@ findHomework = (temp, homeworkId) => {
 }
 
 createArrayResults = (arrayHomeworks, listStudent, submissions) => {
-    console.log(arrayHomeworks)
-    console.log(listStudent)
-    console.log(submissions)
     var res = []
     const nStudent = listStudent.length
     const nHomework = arrayHomeworks.length
@@ -121,42 +118,20 @@ createArrayResults = (arrayHomeworks, listStudent, submissions) => {
         student.scores = Array.from({ length: nHomework }, (_, i) => null)
         res.push(student)
     }
-    
-    res = res.sort((a, b) => {
-        return a.studentId < b.studentId ? -1 : 1
-    })
-    console.log(res)
-    submissions.sort((a, b) => {
-        if (a.studentId != b.studentId) {
-            return a.studentId < b.studentId ? -1 : 1
-        } else {
-            return a.homeworkId < b.homeworkId ? -1 : 1
+    for (let i =0;i<submissions.length;i++){
+        const studentId=submissions[i].studentId._id
+        const homeworkId=submissions[i].homeworkId
+        for(let j=0;j<res.length;j++){
+            if(res[j].studentId.equals(studentId)){
+                for (let t=0;t<nHomework;t++){
+                    if(arrayHomeworks[t]._id.equals(homeworkId)){
+                        res[j].scores[t]=submissions[i].score
+                        break
+                    }
+                }
+                break
+            }
         }
-    })
-    var temp = []
-    for (let i = 0; i < nHomework; i++) {
-        const obj = {
-            homeworkId: arrayHomeworks[i]._id,
-            ith: i
-        }
-        temp.push(obj)
-    }
-    temp = temp.sort((a, b) => {
-        if (a.homeworkId < b.homeworkId) return -1;
-        else return 1
-    })
-
-    var curStudent = 0
-    var curHomework = 0
-    for (let i = 0; i < submissions.length; i++) {
-        while (curStudent < nStudent && !(submissions[i].studentId._id.equals(res[curStudent].studentId))) {
-            curStudent++;
-            curHomework = 0
-        }
-        if (temp[curHomework].homeworkId != submissions[i].homeworkId) {
-            curHomework = findHomework(temp, submissions[i].homeworkId)
-        }
-        if(curStudent>=0 && curStudent<nStudent) res[curStudent].scores[temp[curHomework].ith] = submissions[i].score
     }
     return res
 }
@@ -245,7 +220,7 @@ class SubmissionController {
             const studentId = req.body.studentId;
             const homeworkId = req.body.homeworkId;
             const userId = req.userId
-
+            console.log(userId)
             const isValid = await isUserCanAddScoreToSubmission(userId, homeworkId, studentId)
             if (!isValid) {
                 throw new Error("Rights")

@@ -48,14 +48,14 @@ createFakeSubmissionForEveryMemberInClass = async (classroomId, homeworkId) => {
     );
     const markDone = false;
     const attachedFiles = [];
-    classMember.listStudent.forEach((studentId) => {
+    classMember.listStudent.forEach(async (studentId) => {
         const newSubmission = new Submission({
             homeworkId,
             studentId,
             markDone,
             attachedFiles,
         });
-        newSubmission.save(); // consider to await
+        await newSubmission.save(); // consider to await
     });
 };
 
