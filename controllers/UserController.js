@@ -118,7 +118,7 @@ class UserController {
             firebase.bucket.upload(avatar.path, options, async(err, item) => {
                 try {
                     if (err) {
-                        console.log(err);
+                        console.log(err)
                         throw new Error('ERROR');
                     }
                 } catch (err) {

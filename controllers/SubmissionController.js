@@ -106,6 +106,9 @@ findHomework = (temp, homeworkId) => {
 }
 
 createArrayResults = (arrayHomeworks, listStudent, submissions) => {
+    console.log(arrayHomeworks)
+    console.log(listStudent)
+    console.log(submissions)
     var res = []
     const nStudent = listStudent.length
     const nHomework = arrayHomeworks.length
@@ -118,9 +121,11 @@ createArrayResults = (arrayHomeworks, listStudent, submissions) => {
         student.scores = Array.from({ length: nHomework }, (_, i) => null)
         res.push(student)
     }
+    
     res = res.sort((a, b) => {
         return a.studentId < b.studentId ? -1 : 1
     })
+    console.log(res)
     submissions.sort((a, b) => {
         if (a.studentId != b.studentId) {
             return a.studentId < b.studentId ? -1 : 1
@@ -151,7 +156,7 @@ createArrayResults = (arrayHomeworks, listStudent, submissions) => {
         if (temp[curHomework].homeworkId != submissions[i].homeworkId) {
             curHomework = findHomework(temp, submissions[i].homeworkId)
         }
-        res[curStudent].scores[temp[curHomework].ith] = submissions[i].score
+        if(curStudent>=0 && curStudent<nStudent) res[curStudent].scores[temp[curHomework].ith] = submissions[i].score
     }
     return res
 }
@@ -318,27 +323,33 @@ class SubmissionController {
     }
 
     getAllScoreOf1Class = async(req, res) => {
-        const classroomId = req.body.classroomId
+        try{
+            const classroomId = req.body.classroomId
 
-        // get all homework of class in array
-        const classroom = await Classroom.findOne({ _id: classroomId }, "topicHomework listStudent")
-            .populate({
-                path: "topicHomework.homeworks",
-                select: "title createdAt"
+            // get all homework of class in array
+            const classroom = await Classroom.findOne({ _id: classroomId }, "topicHomework listStudent")
+                .populate({
+                    path: "topicHomework.homeworks",
+                    select: "title createdAt"
+                })
+                .populate({
+                    path: "listStudent",
+                    select: 'fullName avatarUrl'
+                })
+            const arrayHomeworks = getArrayOfHomework(classroom.topicHomework)
+            const submissions = await Submission.find({ homeworkId: { $in: arrayHomeworks }, score: { $exists: true, $ne: null } },
+                "studentId score homeworkId"
+            ).populate({
+                path: 'studentId',
+                select: 'username fullName'
             })
-            .populate({
-                path: "listStudent",
-                select: 'fullName avatarUrl'
-            })
-        const arrayHomeworks = getArrayOfHomework(classroom.topicHomework)
-        const submissions = await Submission.find({ homeworkId: { $in: arrayHomeworks }, score: { $exists: true, $ne: null } },
-            "studentId score homeworkId"
-        ).populate({
-            path: 'studentId',
-            select: 'username fullName'
-        })
-        const result = createArrayResults(arrayHomeworks, classroom.listStudent, submissions)
-        return res.status(200).json({ arrayHomeworks, result })
+            const result = createArrayResults(arrayHomeworks, classroom.listStudent, submissions)
+            return res.status(200).json({ arrayHomeworks, result })
+        }
+        catch(e){
+            console.log(e)
+            return res.status(400).json("Lỗi rồi")
+        }
     }
 }
 
